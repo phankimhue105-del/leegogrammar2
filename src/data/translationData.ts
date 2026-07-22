@@ -12,17 +12,18 @@ export const getTargetSentence = (sampleAnswer: string): string => {
 };
 
 export const getTask1Questions = (revisionId: string, baseTask: WritingChallengeTask): Array<WritingChallengeTask> => {
+  const rId = revisionId === 'mini-2-6' ? 'mini-4-6' : revisionId;
   const extra: Record<string, Array<{ prompt: string; helperWords?: string[]; sampleAnswer: string }>> = {
     'mini-1-3': [
       {
         prompt: "Write a sentence using the plural form of 'man' and 'woman'.",
-        helperWords: ["men", "women", "talk"],
-        sampleAnswer: "The men and women are talking in the meeting room."
+        helperWords: ["men", "women", "talking"],
+        sampleAnswer: "The men are talking to the women in the meeting room."
       },
       {
         prompt: "Write a sentence using the plural form of 'box' and 'key'.",
-        helperWords: ["boxes", "keys", "table"],
-        sampleAnswer: "There are many boxes and keys on the table."
+        helperWords: ["boxes", "keys", "table", "inside"],
+        sampleAnswer: "There are many keys inside the boxes on the table."
       }
     ],
     'mini-4-6': [
@@ -112,8 +113,8 @@ export const getTask1Questions = (revisionId: string, baseTask: WritingChallenge
     'rev-16-18': [
       {
         prompt: "Write a sentence using Past Simple of 'go' and 'see'.",
-        helperWords: ["went", "saw", "yesterday"],
-        sampleAnswer: "We went to the zoo and saw a big tiger yesterday."
+        helperWords: ["went", "saw", "yesterday", "when"],
+        sampleAnswer: "We saw a big tiger when we went to the zoo yesterday."
       },
       {
         prompt: "Write a negative Past Simple sentence using 'did not'.",
@@ -207,7 +208,7 @@ export const getTask1Questions = (revisionId: string, baseTask: WritingChallenge
     ]
   };
 
-  const extraQuestions = extra[revisionId] || [
+  const extraQuestions = extra[rId] || [
     {
       prompt: "Write another sentence related to the grammar of this unit.",
       helperWords: ["practice", "more"],
@@ -233,6 +234,7 @@ export interface TranslationTask {
 }
 
 export const getTask2Questions = (revisionId: string): TranslationTask[] => {
+  const rId = revisionId === 'mini-2-6' ? 'mini-4-6' : revisionId;
   const data: Record<string, { vietnamese: string; correctAnswers: string[] }[]> = {
     'mini-1-3': [
       {
@@ -508,7 +510,7 @@ export const getTask2Questions = (revisionId: string): TranslationTask[] => {
     ]
   };
 
-  const questions = data[revisionId] || [
+  const questions = data[rId] || [
     {
       vietnamese: "Họ học tiếng Anh tại trung tâm LeeGo.",
       correctAnswers: [
