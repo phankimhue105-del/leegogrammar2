@@ -548,7 +548,7 @@ export const officialSyllabus: Mission[] = [
             title: "Describing what you have",
             prompt: "Write a sentence using 'There is' or 'There are' to describe something in your bedroom.",
             helperWords: ["There is", "blue desk", "bedroom"],
-            sampleAnswer: "There is a blue desk and a comfortable bed in my bedroom."
+            sampleAnswer: "There is a blue desk in my comfortable bedroom."
           },
           {
             id: 2,
@@ -911,6 +911,14 @@ function addRevisions() {
           prompt: "Write a sentence describing a special pet or toy you have got, using 'has got' or 'have got'.",
           helperWords: ["have got", "teddy bear", "favorite"],
           sampleAnswer: "I have got a beautiful brown teddy bear on my bed."
+        },
+        {
+          id: 2,
+          type: "picture",
+          title: "Let's Play",
+          prompt: "Write a sentence using 'Let's' to invite friends to play soccer.",
+          helperWords: ["Let's", "play soccer", "weekend"],
+          sampleAnswer: "Let's play soccer in the park this weekend."
         }
       ]
     });
@@ -938,6 +946,14 @@ function addRevisions() {
           prompt: "Write a suggestion starting with 'Let's' to invite your friends to play a game after class.",
           helperWords: ["Let's", "play", "game"],
           sampleAnswer: "Let's play computer games together after our English class!"
+        },
+        {
+          id: 2,
+          type: "situation",
+          title: "My Special Pet",
+          prompt: "Write a sentence describing what special pet you have got.",
+          helperWords: ["have got", "cute kitten", "fluffy"],
+          sampleAnswer: "I have got a cute kitten with fluffy tail."
         }
       ]
     });
@@ -969,6 +985,14 @@ function addRevisions() {
           prompt: "Write 2-3 sentences about what you usually do on Sundays, and what you are doing right now.",
           helperWords: ["usually", "now", "at home"],
           sampleAnswer: "On Sundays, I usually play football in the morning. Right now, I am studying English at my desk."
+        },
+        {
+          id: 2,
+          type: "picture",
+          title: "What are they doing?",
+          prompt: "Write a sentence describing what they are doing in the kitchen.",
+          helperWords: ["they", "cooking", "kitchen"],
+          sampleAnswer: "They are cooking delicious dinner in the kitchen."
         }
       ]
     });
@@ -1001,6 +1025,14 @@ function addRevisions() {
           prompt: "Write a sentence in Past Simple about what you did yesterday evening.",
           helperWords: ["watched", "played", "yesterday"],
           sampleAnswer: "Yesterday evening, I watched a funny movie with my parents."
+        },
+        {
+          id: 2,
+          type: "situation",
+          title: "My Weekend",
+          prompt: "Write a sentence in Past Simple about where you went last Sunday.",
+          helperWords: ["went", "zoo", "family"],
+          sampleAnswer: "I went to the zoo with my family last Sunday."
         }
       ]
     });
@@ -1027,6 +1059,14 @@ function addRevisions() {
           prompt: "Write a brief diary entry (2-3 sentences) describing something special you did last week and what you are doing now.",
           helperWords: ["last week", "visited", "now", "learning"],
           sampleAnswer: "Last week, I visited my grandparents in the countryside. Now, I am sitting in my room learning English."
+        },
+        {
+          id: 2,
+          type: "picture",
+          title: "A Past Activity",
+          prompt: "Write a sentence in Past Simple about what you bought yesterday.",
+          helperWords: ["bought", "new toy", "yesterday"],
+          sampleAnswer: "I bought a new toy car at the store yesterday."
         }
       ]
     });
@@ -1058,6 +1098,14 @@ function addRevisions() {
           prompt: "Write a question using 'Where' or 'How many' to ask a friend about their books.",
           helperWords: ["How many", "books", "have you got"],
           sampleAnswer: "How many English books have you got in your desk?"
+        },
+        {
+          id: 2,
+          type: "situation",
+          title: "Where did you go?",
+          prompt: "Write a question to ask where your friend went yesterday.",
+          helperWords: ["where", "did you go", "yesterday"],
+          sampleAnswer: "Where did you go with your family yesterday?"
         }
       ]
     });
@@ -1089,6 +1137,14 @@ function addRevisions() {
           prompt: "Write a sentence using 'must' or 'mustn't' to describe a rule in your classroom.",
           helperWords: ["must", "listen", "teacher"],
           sampleAnswer: "We must listen quietly to our teacher in the classroom."
+        },
+        {
+          id: 2,
+          type: "picture",
+          title: "Healthy Advice",
+          prompt: "Write a sentence using 'should' to give health advice to your friend.",
+          helperWords: ["should", "drink", "more water"],
+          sampleAnswer: "You should drink more water every day to stay healthy."
         }
       ]
     });
@@ -1117,9 +1173,17 @@ function addRevisions() {
           id: 1,
           type: "sentence",
           title: "My Prepositions",
-          prompt: "Write a sentence using 'on' or 'at' to tell what time you do your homework and where your notebook is.",
+          prompt: "Write a sentence using 'on' or 'at' to tell what time you do your homework with your notebook placed on the table.",
           helperWords: ["at 7 PM", "on the table"],
-          sampleAnswer: "I do my homework at 7 PM and my notebook is on the table."
+          sampleAnswer: "I do my homework at 7 PM with my notebook placed on the table."
+        },
+        {
+          id: 2,
+          type: "picture",
+          title: "Where is the cat?",
+          prompt: "Write a sentence using 'under' or 'next to' to describe where your cat is sleeping.",
+          helperWords: ["cat", "sleeping", "under the chair"],
+          sampleAnswer: "My little cat is sleeping under the chair in the living room."
         }
       ]
     });
@@ -1151,6 +1215,14 @@ function addRevisions() {
           prompt: "Write a sentence using 'who' to describe your English teacher.",
           helperWords: ["teacher who", "teaches us"],
           sampleAnswer: "Miss Linh is the teacher who teaches us English at LeeGo."
+        },
+        {
+          id: 2,
+          type: "situation",
+          title: "Describing a Book",
+          prompt: "Write a sentence using 'which' or 'that' to describe a book you bought.",
+          helperWords: ["book which", "bought", "interesting"],
+          sampleAnswer: "This is the book which I bought at the shop."
         }
       ]
     });
@@ -1180,8 +1252,16 @@ function addRevisions() {
           type: "sentence",
           title: "To for Purpose",
           prompt: "Write a sentence using 'to' + base verb to describe why you go to LeeGo English Center.",
-          helperWords: ["go to LeeGo", "to learn"],
-          sampleAnswer: "I go to LeeGo Center to learn English grammar and meet friends."
+          helperWords: ["go to LeeGo", "to learn", "grammar"],
+          sampleAnswer: "I go to LeeGo Center to learn English grammar."
+        },
+        {
+          id: 2,
+          type: "picture",
+          title: "Reason for Study",
+          prompt: "Write a sentence using 'because' to explain why you study hard.",
+          helperWords: ["study hard", "because", "want to pass"],
+          sampleAnswer: "I study hard because I want to pass my English exam."
         }
       ]
     });
@@ -1203,11 +1283,19 @@ function addRevisions() {
       writingChallenge: [
         {
           id: 1,
-          type: "paragraph",
+          type: "sentence",
           title: "Friendship Description",
-          prompt: "Write a short paragraph (2-3 sentences) about why you like your best friend, using 'because' and 'who'.",
-          helperWords: ["friend who", "nice", "because"],
-          sampleAnswer: "My best friend is Toby, who always shares his toys with me. I like him because he is very funny and helpful."
+          prompt: "Write a sentence about your best friend using 'who'.",
+          helperWords: ["friend who", "nice", "shares"],
+          sampleAnswer: "Toby is a nice boy who always shares his toys."
+        },
+        {
+          id: 2,
+          type: "situation",
+          title: "Going out for Purpose",
+          prompt: "Write a sentence using 'to' + V-inf to describe why you went to the store.",
+          helperWords: ["went to store", "to buy", "milk"],
+          sampleAnswer: "I went to the store to buy some fresh milk."
         }
       ]
     });
@@ -1237,8 +1325,16 @@ function addRevisions() {
           type: "sentence",
           title: "My Adverbs",
           prompt: "Write a sentence using an adverb to describe how you play piano, read books, or play sports.",
-          helperWords: ["carefully", "happily", "well", "play"],
-          sampleAnswer: "I play football very well and run happily on the pitch."
+          helperWords: ["well", "play", "football", "pitch"],
+          sampleAnswer: "I play football very well on the green pitch."
+        },
+        {
+          id: 2,
+          type: "picture",
+          title: "How do you study?",
+          prompt: "Write a sentence using 'carefully' to describe how you do your exam.",
+          helperWords: ["do exam", "carefully", "always"],
+          sampleAnswer: "I always do my English exam carefully to get good marks."
         }
       ]
     });
@@ -1261,11 +1357,19 @@ function addRevisions() {
       writingChallenge: [
         {
           id: 1,
-          type: "paragraph",
+          type: "sentence",
           title: "My Grammar Explorer Journey",
-          prompt: "Write 3-4 sentences describing your journey learning English grammar. Write about what you can do now and why you are happy.",
-          helperWords: ["learned", "now I can", "happy because"],
-          sampleAnswer: "I have learned many units in Grammar Explorer. Now I can write sentences using plurals and adjectives. I am happy because I can speak English well."
+          prompt: "Write a sentence describing what you can do now after learning English grammar.",
+          helperWords: ["happy because", "write", "now"],
+          sampleAnswer: "I am happy because I can write correct English sentences now."
+        },
+        {
+          id: 2,
+          type: "paragraph",
+          title: "Grammar Explorer Success",
+          prompt: "Write a sentence about what you will do next to keep practicing English.",
+          helperWords: ["will", "practice", "every day"],
+          sampleAnswer: "I will practice reading English books every day to learn more."
         }
       ]
     });
