@@ -227,144 +227,39 @@ export const getTask1Questions = (revisionId: string, baseTask: WritingChallenge
   ];
 };
 
-export interface TranslationTask {
-  vietnamese: string;
-  correctAnswers: string[];
-}
-
-export const getTranslationTask = (revisionId: string): TranslationTask => {
-  const data: Record<string, TranslationTask> = {
-    'mini-1-3': {
-      vietnamese: "Những đứa trẻ đang chơi với những đồ chơi mới của chúng.",
-      correctAnswers: [
-        "The children are playing with their new toys.",
-        "Children are playing with their new toys.",
-        "The children are playing with new toys."
-      ]
-    },
-    'mini-4-6': {
-      vietnamese: "Anh ấy đang dắt con chó của anh ấy đi dạo trong công viên.",
-      correctAnswers: [
-        "He is walking his dog in the park.",
-        "He is taking his dog for a walk in the park."
-      ]
-    },
-    'rev-1-6': {
-      vietnamese: "Chúng tôi yêu ngôi trường tiểu học của chúng tôi.",
-      correctAnswers: [
-        "We love our primary school.",
-        "We love our elementary school."
-      ]
-    },
-    'mini-7-10': {
-      vietnamese: "Những con khỉ đang leo trèo trên cây lúc này.",
-      correctAnswers: [
-        "The monkeys are climbing the trees right now.",
-        "Monkeys are climbing on trees right now.",
-        "The monkeys are climbing trees at the moment."
-      ]
-    },
-    'rev-7-10': {
-      vietnamese: "Cô ấy luôn luôn uống sữa vào buổi sáng.",
-      correctAnswers: [
-        "She always drinks milk in the morning.",
-        "She always has milk in the morning."
-      ]
-    },
-    'mini-11-13': {
-      vietnamese: "Họ không phải đang xem tivi trong phòng khách.",
-      correctAnswers: [
-        "They are not watching television in the living room.",
-        "They are not watching TV in the living room.",
-        "They aren't watching TV in the living room."
-      ]
-    },
-    'mini-14-15': {
-      vietnamese: "Con mèo đang ngủ ở bên cạnh cái ghế sofa.",
-      correctAnswers: [
-        "The cat is sleeping next to the sofa.",
-        "The cat is sleeping beside the sofa."
-      ]
-    },
-    'rev-11-15': {
-      vietnamese: "Họ đang ngồi dưới một cái cây lớn trong vườn.",
-      correctAnswers: [
-        "They are sitting under a big tree in the garden.",
-        "They are sitting under a large tree in the garden."
-      ]
-    },
-    'rev-16-18': {
-      vietnamese: "Hôm qua chúng tôi đã đi đến rạp chiếu phim và xem một bộ phim hay.",
-      correctAnswers: [
-        "Yesterday we went to the cinema and watched a good movie.",
-        "We went to the movie theater and watched a good movie yesterday.",
-        "We went to the cinema and saw a good film yesterday."
-      ]
-    },
-    'rev-19-20': {
-      vietnamese: "Chúng tôi dự định sẽ đến thăm bà của chúng tôi vào cuối tuần tới.",
-      correctAnswers: [
-        "We are going to visit our grandmother next weekend.",
-        "We are going to visit our grandma next weekend.",
-        "We plan to visit our grandmother next weekend."
-      ]
-    },
-    'rev-21': {
-      vietnamese: "Bạn nên ăn nhiều rau xanh và trái cây mỗi ngày.",
-      correctAnswers: [
-        "You should eat more green vegetables and fruits every day.",
-        "You should eat lots of green vegetables and fruit daily.",
-        "You should eat more vegetables and fruits every day."
-      ]
-    },
-    'mini-22-23': {
-      vietnamese: "Đây là món đồ chơi mà bố tôi đã mua cho tôi.",
-      correctAnswers: [
-        "This is the toy which my father bought for me.",
-        "This is the toy that my father bought for me.",
-        "This is the toy my dad bought for me."
-      ]
-    },
-    'mini-24-26': {
-      vietnamese: "Tôi đến thư viện để đọc sách vào mỗi Chủ Nhật.",
-      correctAnswers: [
-        "I go to the library to read books every Sunday.",
-        "I go to the library to read books on Sundays.",
-        "I visit the library to read books every Sunday."
-      ]
-    },
-    'rev-22-26': {
-      vietnamese: "Toby là cậu bé người đã đi đến chợ để mua rau.",
-      correctAnswers: [
-        "Toby is the boy who went to the market to buy vegetables.",
-        "Toby is the boy who went to the market to buy some vegetables.",
-        "Toby is the boy that went to the market to buy vegetables."
-      ]
-    },
-    'rev-27-28': {
-      vietnamese: "Anh ấy chạy rất nhanh để bắt chuyến xe buýt trường học.",
-      correctAnswers: [
-        "He ran very quickly to catch the school bus.",
-        "He ran very fast to catch the school bus."
-      ]
-    },
-    'final-revision': {
-      vietnamese: "Bây giờ tôi có thể viết các câu tiếng Anh một cách cẩn thận.",
-      correctAnswers: [
-        "Now I can write English sentences carefully.",
-        "I can write English sentences carefully now.",
-        "I can write English sentences very carefully now."
-      ]
-    }
-  };
-
-  return data[revisionId] || {
-    vietnamese: "Họ học tiếng Anh tại trung tâm LeeGo.",
-    correctAnswers: [
-      "They study English at LeeGo center.",
-      "They learn English at LeeGo center."
+        vietnamese: "Bây giờ tôi có thể viết các câu tiếng Anh một cách cẩn thận.",
+        correctAnswers: [
+          "Now I can write English sentences carefully.",
+          "I can write English sentences carefully now.",
+          "I can write English sentences very carefully now."
+        ]
+      },
+      {
+        vietnamese: "Cô ấy đã rất vui vẻ vì cô ấy đã đỗ kỳ thi tiếng Anh.",
+        correctAnswers: [
+          "She was very happy because she passed the English test.",
+          "She was happy because she passed the English exam."
+        ]
+      }
     ]
   };
+
+  return data[revisionId] || [
+    {
+      vietnamese: "Họ học tiếng Anh tại trung tâm LeeGo.",
+      correctAnswers: [
+        "They study English at LeeGo center.",
+        "They learn English at LeeGo center."
+      ]
+    },
+    {
+      vietnamese: "Chúng tôi muốn thực hành nói tiếng Anh mỗi ngày.",
+      correctAnswers: [
+        "We want to practice speaking English every day.",
+        "We want to practice speaking English daily."
+      ]
+    }
+  ];
 };
 
 export function evaluateTranslation(
@@ -404,10 +299,10 @@ export function evaluateTranslation(
     
     if (!hasPunctuation && correctHasPunctuation) {
       return {
-        score: 98,
-        feedback: "Excellent grammar and vocabulary. 2 points were deducted because the sentence is missing the final punctuation mark.",
-        overallFeedback: "Excellent grammar and vocabulary. 2 points were deducted because the sentence is missing the final punctuation mark.",
-        isCorrect: false,
+        score: 99,
+        feedback: "Excellent grammar and vocabulary. 1 point was deducted because the sentence is missing the final punctuation mark. Please remember to finish English sentences with appropriate punctuation.",
+        overallFeedback: "Excellent grammar and vocabulary. 1 point was deducted because the sentence is missing the final punctuation mark. Please remember to finish English sentences with appropriate punctuation.",
+        isCorrect: true,
         grammarScore: 100,
         vocabScore: 100,
         structureScore: 100,
