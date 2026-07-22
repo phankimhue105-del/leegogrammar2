@@ -30,6 +30,7 @@ export default function NormalUnitView({
   const [answeredCount, setAnsweredCount] = useState(0);
   const [showExplanation, setShowExplanation] = useState(false);
   const [gameFinished, setGameFinished] = useState(false);
+  const [feedbackAnimation, setFeedbackAnimation] = useState<{ type: 'correct' | 'incorrect'; text: string; id: number } | null>(null);
   
   // Track previous questions results
   const [results, setResults] = useState<{ id: number; question: string; isCorrect: boolean; selected: string; correct: string }[]>([]);
@@ -48,10 +49,99 @@ export default function NormalUnitView({
     setShowExplanation(false);
     setGameFinished(false);
     setResults([]);
+    setFeedbackAnimation(null);
   }, [unit.id]);
+
+  const playSelectionSound = () => {
+    if (!soundEnabled) return;
+    if (typeof window === 'undefined') return;
+    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioContextClass) return;
+    try {
+      const ctx = new AudioContextClass();
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(600, now);
+      gain.gain.setValueAtTime(0.08, now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.05);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.05);
+    } catch (e) {
+      console.warn("Web Audio API blocked or not supported", e);
+    }
+  };
+
+  const playCorrectSound = () => {
+    if (!soundEnabled) return;
+    if (typeof window === 'undefined') return;
+    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioContextClass) return;
+    try {
+      const ctx = new AudioContextClass();
+      const now = ctx.currentTime;
+      const playNote = (freq: number, startTime: number, duration: number) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, startTime);
+        gain.gain.setValueAtTime(0, startTime);
+        gain.gain.linearRampToValueAtTime(0.12, startTime + 0.03);
+        gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(startTime);
+        osc.stop(startTime + duration);
+      };
+      playNote(587.33, now, 0.25);
+      playNote(880.00, now + 0.08, 0.35);
+    } catch (e) {
+      console.warn("Web Audio API blocked or not supported", e);
+    }
+  };
+
+  const playIncorrectSound = () => {
+    if (!soundEnabled) return;
+    if (typeof window === 'undefined') return;
+    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioContextClass) return;
+    try {
+      const ctx = new AudioContextClass();
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(220, now);
+      osc.frequency.exponentialRampToValueAtTime(140, now + 0.4);
+      gain.gain.setValueAtTime(0.15, now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.4);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.4);
+    } catch (e) {
+      console.warn("Web Audio API blocked or not supported", e);
+    }
+  };
+
+  const handleNextQuestion = () => {
+    setIsSubmitted(false);
+    setSelectedOption(null);
+    setShowExplanation(false);
+
+    if (currentQuestionIndex < 9) {
+      setCurrentQuestionIndex(prev => prev + 1);
+    } else {
+      setGameFinished(true);
+    }
+  };
 
   const handleOptionSelect = (option: string) => {
     if (isSubmitted) return;
+    playSelectionSound();
     setSelectedOption(option);
   };
 
@@ -65,6 +155,23 @@ export default function NormalUnitView({
     
     if (correct) {
       setScore(prev => prev + 1);
+      playCorrectSound();
+      const praises = ["Excellent!", "Perfect!", "Great Job!"];
+      const text = Math.random() < 0.5 ? "+10 XP" : (Math.random() < 0.5 ? "+5 Stars" : praises[Math.floor(Math.random() * praises.length)]);
+      setFeedbackAnimation({ type: 'correct', text, id: Date.now() });
+      setTimeout(() => {
+        setFeedbackAnimation(null);
+        handleNextQuestion();
+      }, 1500);
+    } else {
+      playIncorrectSound();
+      const encouragements = ["Try Again", "Keep Going", "Not Quite"];
+      const text = encouragements[Math.floor(Math.random() * encouragements.length)];
+      setFeedbackAnimation({ type: 'incorrect', text, id: Date.now() });
+      setShowExplanation(true);
+      setTimeout(() => {
+        setFeedbackAnimation(null);
+      }, 1500);
     }
     
     setResults(prev => [
@@ -77,20 +184,6 @@ export default function NormalUnitView({
         correct: currentQuestion.answer
       }
     ]);
-    
-    setShowExplanation(true);
-  };
-
-  const handleNextQuestion = () => {
-    setIsSubmitted(false);
-    setSelectedOption(null);
-    setShowExplanation(false);
-
-    if (currentQuestionIndex < 9) {
-      setCurrentQuestionIndex(prev => prev + 1);
-    } else {
-      setGameFinished(true);
-    }
   };
 
   const handleResetGame = () => {
@@ -442,7 +535,7 @@ export default function NormalUnitView({
 
           {/* Active Quiz Area */}
           {!gameFinished ? (
-            <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm space-y-6">
+            <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm space-y-6 relative overflow-hidden">
               {/* Question Header */}
               <div className="flex justify-between items-center border-b border-slate-50 pb-3">
                 <span className="text-[10px] text-slate-400 font-extrabold tracking-widest uppercase">
@@ -582,6 +675,42 @@ export default function NormalUnitView({
                           : "Không sao cả đâu con yêu! Lỗi sai chính là người bạn tốt giúp con học nhanh hơn. Cố gắng ở câu tiếp theo nha!"}
                       </p>
                     </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Centered Floating Feedback Animation overlay */}
+              <AnimatePresence>
+                {feedbackAnimation && (
+                  <motion.div
+                    key={feedbackAnimation.id}
+                    initial={{ opacity: 0, scale: 0.5, y: 20 }}
+                    animate={{ opacity: 1, scale: 1.2, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.8, y: -20 }}
+                    className={`absolute inset-0 z-50 flex flex-col items-center justify-center ${
+                      feedbackAnimation.type === 'correct' 
+                        ? 'bg-emerald-500/95 text-white' 
+                        : 'bg-rose-500/95 text-white'
+                    }`}
+                  >
+                    <motion.div
+                      initial={{ scale: 0.8 }}
+                      animate={{ scale: [1, 1.15, 1] }}
+                      transition={{ repeat: Infinity, duration: 1 }}
+                      className="text-center p-6 rounded-2xl flex flex-col items-center gap-2"
+                    >
+                      {feedbackAnimation.type === 'correct' ? (
+                        <>
+                          <span className="text-4xl">🎉</span>
+                          <span className="text-2xl font-black tracking-wider uppercase">{feedbackAnimation.text}</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-4xl">💪</span>
+                          <span className="text-2xl font-black tracking-wider uppercase">{feedbackAnimation.text}</span>
+                        </>
+                      )}
+                    </motion.div>
                   </motion.div>
                 )}
               </AnimatePresence>
