@@ -367,3 +367,109 @@ export const getTranslationTask = (revisionId: string): TranslationTask => {
   };
 };
 
+export function evaluateTranslation(
+  studentAnswer: string,
+  correctAnswer: string | string[]
+) {
+  const correctAnswers = Array.isArray(correctAnswer) ? correctAnswer : [correctAnswer];
+  
+  const cleanStr = (s: string) => s.trim().replace(/\s+/g, ' ');
+  const stripPunctuation = (s: string) => s.replace(/[.!?]+$/, '').trim();
+
+  const studentClean = cleanStr(studentAnswer);
+  const studentLower = studentClean.toLowerCase();
+
+  // 1. Exact match (case-insensitive)
+  const matchesExact = correctAnswers.some(ans => cleanStr(ans).toLowerCase() === studentLower);
+  if (matchesExact) {
+    return {
+      score: 100,
+      feedback: "Excellent! Your translation is completely correct.",
+      overallFeedback: "Excellent! Your translation is completely correct.",
+      isCorrect: true,
+      grammarScore: 100,
+      vocabScore: 100,
+      structureScore: 100,
+      corrections: []
+    };
+  }
+
+  // 2. Stripped match (punctuation error only)
+  const studentStripped = stripPunctuation(studentClean).toLowerCase();
+  const matchedAns = correctAnswers.find(ans => stripPunctuation(cleanStr(ans)).toLowerCase() === studentStripped);
+
+  if (matchedAns) {
+    const hasPunctuation = /[.!?]$/.test(studentClean);
+    const correctHasPunctuation = /[.!?]$/.test(cleanStr(matchedAns));
+    
+    if (!hasPunctuation && correctHasPunctuation) {
+      return {
+        score: 98,
+        feedback: "Excellent grammar and vocabulary. 2 points were deducted because the sentence is missing the final punctuation mark.",
+        overallFeedback: "Excellent grammar and vocabulary. 2 points were deducted because the sentence is missing the final punctuation mark.",
+        isCorrect: false,
+        grammarScore: 100,
+        vocabScore: 100,
+        structureScore: 100,
+        corrections: []
+      };
+    }
+  }
+
+  // 3. Otherwise, calculate word overlap score
+  const getWordOverlapScore = (stud: string, correct: string) => {
+    const studWords = stud.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "").split(/\s+/).filter(Boolean);
+    const corrWords = correct.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "").split(/\s+/).filter(Boolean);
+    
+    const matched = studWords.filter(w => corrWords.includes(w));
+    const overlapRatio = matched.length / Math.max(studWords.length, corrWords.length);
+    return Math.round(overlapRatio * 100);
+  };
+
+  let bestScore = 0;
+  let bestMatch = correctAnswers[0];
+  correctAnswers.forEach(ans => {
+    const score = getWordOverlapScore(studentClean, ans);
+    if (score > bestScore) {
+      bestScore = score;
+      bestMatch = ans;
+    }
+  });
+
+  const finalScore = Math.max(30, bestScore);
+  
+  let feedback = "Watch the word order. Try to match the grammar of the lesson.";
+  if (finalScore >= 90) {
+    feedback = "Almost correct. Check the spelling or word choice.";
+  } else if (finalScore >= 75) {
+    feedback = "Good job! Check the verb tense or article.";
+  } else if (finalScore >= 50) {
+    feedback = "Remember the grammar point of the lesson and check the vocabulary.";
+  }
+
+  const corrections = [
+    {
+      original: studentClean,
+      corrected: bestMatch,
+      grammarRule: "Grammar & Vocabulary Match",
+      explanation: `Dịch đúng là: "${bestMatch}". Hãy đối chiếu bài viết của con để sửa các lỗi từ vựng hoặc chia động từ nhé.`,
+      memoryTip: "Hãy luyện tập dịch nhiều câu tương tự để ghi nhớ cấu trúc.",
+      encouragement: "Cố lên con nhé, hãy bấm nút thử lại để đạt điểm cao hơn! 💪"
+    }
+  ];
+
+  const grammarScore = Math.max(35, Math.round(finalScore * 0.95));
+  const vocabScore = Math.max(35, Math.round(finalScore * 1.0));
+  const structureScore = Math.max(30, Math.round(finalScore * 0.9));
+
+  return {
+    score: finalScore,
+    feedback: feedback,
+    overallFeedback: feedback,
+    isCorrect: false,
+    grammarScore,
+    vocabScore,
+    structureScore,
+    corrections
+  };
+}
