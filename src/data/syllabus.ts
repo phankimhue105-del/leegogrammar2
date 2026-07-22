@@ -1,3 +1,5 @@
+import { grammarQuestionsDatabase } from './grammarQuestionsData';
+
 export interface SnapshotTableItem {
   col1: string;
   col2: string;
@@ -71,7 +73,84 @@ export interface Mission {
 }
 
 // Generate high quality questions for any unit as a fallback to ensure 100% playability
+function getMixedQuestions(unitIds: number[], count: number): Question[] {
+  const result: Question[] = [];
+  let idx = 0;
+  let attempts = 0;
+  const maxAttempts = 1000;
+  while (result.length < count && attempts < maxAttempts) {
+    attempts++;
+    for (const uId of unitIds) {
+      if (result.length >= count) break;
+      const uQs = grammarQuestionsDatabase[uId];
+      if (uQs) {
+        const qIndex = Math.floor(idx / unitIds.length) % uQs.length;
+        const baseQ = uQs[qIndex];
+        const alreadyAdded = result.some(r => r.question === baseQ.question);
+        if (!alreadyAdded) {
+          result.push({
+            id: result.length + 1,
+            question: baseQ.question,
+            options: baseQ.options,
+            answer: baseQ.answer,
+            hint: baseQ.hint
+          });
+        }
+      }
+    }
+    idx += unitIds.length;
+  }
+  
+  if (result.length < count) {
+    let duplicateIdx = 0;
+    while (result.length < count) {
+      for (const uId of unitIds) {
+        if (result.length >= count) break;
+        const uQs = grammarQuestionsDatabase[uId];
+        if (uQs) {
+          const baseQ = uQs[duplicateIdx % uQs.length];
+          result.push({
+            id: result.length + 1,
+            question: baseQ.question,
+            options: baseQ.options,
+            answer: baseQ.answer,
+            hint: baseQ.hint
+          });
+          duplicateIdx++;
+        }
+      }
+    }
+  }
+  
+  return result;
+}
+
 export function generateQuestionsForUnit(unitId: number, title: string): Question[] {
+  if (unitId === 100) return getMixedQuestions([7, 8, 9, 10], 10);
+  if (unitId === 200) return getMixedQuestions([7, 8, 9, 10], 20);
+  if (unitId === 300) return getMixedQuestions([11, 12, 13], 10);
+  if (unitId === 400) return getMixedQuestions([14, 15], 10);
+  if (unitId === 500) return getMixedQuestions([11, 12, 13, 14, 15], 20);
+  if (unitId === 600) return getMixedQuestions([16, 17, 18], 20);
+  if (unitId === 700) return getMixedQuestions([19, 20], 20);
+  if (unitId === 800) return getMixedQuestions([19, 20, 21], 20);
+  if (unitId === 900) return getMixedQuestions([22, 23], 10);
+  if (unitId === 1000) return getMixedQuestions([24, 25, 26], 10);
+  if (unitId === 1100) return getMixedQuestions([22, 23, 24, 25, 26], 20);
+  if (unitId === 1200) return getMixedQuestions([27, 28], 20);
+  if (unitId === 1300) return getMixedQuestions([7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28], 20);
+
+  const databaseQs = grammarQuestionsDatabase[unitId];
+  if (databaseQs) {
+    return databaseQs.map((q, idx) => ({
+      id: idx + 1,
+      question: q.question,
+      options: q.options,
+      answer: q.answer,
+      hint: q.hint
+    }));
+  }
+
   const list: Question[] = [];
   const templates = [
     {
@@ -79,60 +158,6 @@ export function generateQuestionsForUnit(unitId: number, title: string): Questio
       opts: ["is", "are", "am", "be"],
       ans: "is",
       h: "Singular subject 'The cat' takes singular verb 'is'."
-    },
-    {
-      q: "Which one is correct?",
-      opts: ["There are some apples.", "There is some apples.", "There are an apple.", "There is any apples."],
-      ans: "There are some apples.",
-      h: "Use 'There are' with plural countable nouns like 'apples'."
-    },
-    {
-      q: "Fill in the blank: 'I saw three ______ in the park.'",
-      opts: ["deer", "deers", "deeres", "deer-plural"],
-      ans: "deer",
-      h: "'Deer' is an irregular noun; its plural form is the same as singular."
-    },
-    {
-      q: "Identify the countable noun:",
-      opts: ["bottle", "water", "milk", "sand"],
-      ans: "bottle",
-      h: "You can count 'one bottle, two bottles', but water is uncountable."
-    },
-    {
-      q: "Complete the sentence: 'Can you give me ______ information?'",
-      opts: ["some", "an", "many", "these"],
-      ans: "some",
-      h: "'Information' is uncountable, so we use 'some' in positive sentences."
-    },
-    {
-      q: "Fill in: 'Look at ______ birds high up in the sky!'",
-      opts: ["those", "these", "this", "that"],
-      ans: "those",
-      h: "Use 'those' for plural objects that are far away."
-    },
-    {
-      q: "Choose the possessive adjective: 'This is ______ book. (belonging to me)'",
-      opts: ["my", "mine", "me", "I"],
-      ans: "my",
-      h: "Possessive adjective 'my' goes before the noun 'book'."
-    },
-    {
-      q: "Fill in the blank: 'They ______ got a big yellow balloon.'",
-      opts: ["have", "has", "is", "are"],
-      ans: "have",
-      h: "Use 'have got' with 'I, you, we, they'."
-    },
-    {
-      q: "Which is the correct imperative sentence?",
-      opts: ["Close the door, please.", "Closing the door, please.", "Closes the door.", "To close the door."],
-      ans: "Close the door, please.",
-      h: "Imperatives start with the base form of the verb."
-    },
-    {
-      q: "Complete the sentence: 'She is ______ tennis right now.'",
-      opts: ["playing", "plays", "play", "played"],
-      ans: "playing",
-      h: "Present Continuous uses subject + be + verb-ing."
     }
   ];
 
