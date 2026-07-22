@@ -72,6 +72,7 @@ export default function RevisionView({
 
   // --- Sound & Reward Animation States ---
   const [rewardAnimation, setRewardAnimation] = useState<{ type: 'xp' | 'star' | 'great'; text: string; id: number } | null>(null);
+  const [stage1Feedback, setStage1Feedback] = useState<{ type: 'correct' | 'incorrect'; text: string; id: number } | null>(null);
 
   useEffect(() => {
     if (rewardAnimation) {
@@ -81,6 +82,29 @@ export default function RevisionView({
       return () => clearTimeout(timer);
     }
   }, [rewardAnimation]);
+
+  const playSelectionSound = () => {
+    if (!soundEnabled) return;
+    if (typeof window === 'undefined') return;
+    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioContextClass) return;
+    try {
+      const ctx = new AudioContextClass();
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(600, now);
+      gain.gain.setValueAtTime(0.08, now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.05);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.05);
+    } catch (e) {
+      console.warn("Web Audio API blocked or not supported", e);
+    }
+  };
 
   const playCorrectSound = () => {
     if (!soundEnabled) return;
@@ -160,6 +184,7 @@ export default function RevisionView({
 
   const handlePointerDown = (e: React.PointerEvent, word: { id: string; text: string }, source: 'bank' | 'slot', sourceIndex?: number) => {
     e.currentTarget.releasePointerCapture(e.pointerId);
+    playSelectionSound();
     setDragState({
       word,
       source,
@@ -314,6 +339,7 @@ export default function RevisionView({
 
   const handleStage1Select = (option: string) => {
     if (stage1Submitted) return;
+    playSelectionSound();
     setStage1Selected(option);
   };
 
@@ -326,8 +352,24 @@ export default function RevisionView({
     
     if (isCorrect) {
       setStage1Score(prev => prev + 1);
+      playCorrectSound();
+      const praises = ["Excellent!", "Perfect!", "Great Job!"];
+      const text = Math.random() < 0.5 ? "+10 XP" : (Math.random() < 0.5 ? "+5 Stars" : praises[Math.floor(Math.random() * praises.length)]);
+      setStage1Feedback({ type: 'correct', text, id: Date.now() });
+      setTimeout(() => {
+        setStage1Feedback(null);
+        handleStage1Next();
+      }, 1500);
+    } else {
+      playIncorrectSound();
+      const encouragements = ["Try Again", "Keep Going", "Not Quite"];
+      const text = encouragements[Math.floor(Math.random() * encouragements.length)];
+      setStage1Feedback({ type: 'incorrect', text, id: Date.now() });
+      setStage1Explanations(true);
+      setTimeout(() => {
+        setStage1Feedback(null);
+      }, 1500);
     }
-    setStage1Explanations(true);
   };
 
   const handleStage1Next = () => {
@@ -346,6 +388,7 @@ export default function RevisionView({
   // Handle Stage 2 logic
   const handleStage2Select = (qId: number, option: string) => {
     if (stage2Submitted) return;
+    playSelectionSound();
     setStage2Answers(prev => ({ ...prev, [qId]: option }));
   };
 
@@ -525,7 +568,7 @@ export default function RevisionView({
           animate={{ opacity: 1, y: 0 }}
           className="space-y-6"
         >
-          <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm space-y-6">
+          <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm space-y-6 relative overflow-hidden">
             <div className="flex justify-between items-center border-b border-slate-50 pb-3">
               <div className="space-y-0.5">
                 <span className="text-[10px] text-red-600 font-extrabold uppercase tracking-wider block">CHALLENGE 1: GRAMMAR SPEEDRUN</span>
@@ -642,6 +685,42 @@ export default function RevisionView({
                       ? "Chúc mừng con! Giỏi lắm nha!" 
                       : "Sai một câu không sao đâu con, chúng mình cùng ghi nhớ để làm tốt hơn nha!"}
                   </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Centered Floating Feedback Animation overlay */}
+            <AnimatePresence>
+              {stage1Feedback && (
+                <motion.div
+                  key={stage1Feedback.id}
+                  initial={{ opacity: 0, scale: 0.5, y: 20 }}
+                  animate={{ opacity: 1, scale: 1.2, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.8, y: -20 }}
+                  className={`absolute inset-0 z-50 flex flex-col items-center justify-center ${
+                    stage1Feedback.type === 'correct' 
+                      ? 'bg-emerald-500/95 text-white' 
+                      : 'bg-rose-500/95 text-white'
+                  }`}
+                >
+                  <motion.div
+                    initial={{ scale: 0.8 }}
+                    animate={{ scale: [1, 1.15, 1] }}
+                    transition={{ repeat: Infinity, duration: 1 }}
+                    className="text-center p-6 rounded-2xl flex flex-col items-center gap-2"
+                  >
+                    {stage1Feedback.type === 'correct' ? (
+                      <>
+                        <span className="text-4xl">🎉</span>
+                        <span className="text-2xl font-black tracking-wider uppercase">{stage1Feedback.text}</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-4xl">💪</span>
+                        <span className="text-2xl font-black tracking-wider uppercase">{stage1Feedback.text}</span>
+                      </>
+                    )}
+                  </motion.div>
                 </motion.div>
               )}
             </AnimatePresence>
