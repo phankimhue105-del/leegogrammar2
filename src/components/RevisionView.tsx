@@ -6,6 +6,7 @@ import {
   BrainCircuit, MessageSquare, Loader2, Award, Star
 } from 'lucide-react';
 import { SyllabusRevision, Question, WritingChallengeTask } from '../data/syllabus';
+import { getTask1Questions, getTranslationTask, evaluateTranslation } from '../data/translationData';
 
 interface RevisionViewProps {
   revision: SyllabusRevision;
@@ -51,272 +52,8 @@ export default function RevisionView({
     }>;
   }>>({});
 
-  // --- Sentence Ordering Exercise (Task 1 Redesign) ---
-  interface ShuffledWord {
-    id: string;
-    text: string;
-  }
-
-  const [sentenceWords, setSentenceWords] = useState<ShuffledWord[]>([]);
-  const [placedSentenceWords, setPlacedSentenceWords] = useState<(ShuffledWord | null)[]>([]);
-  const [checkedResult, setCheckedResult] = useState<{ isChecked: boolean; isCorrect: boolean } | null>(null);
-
-  const [dragState, setDragState] = useState<{
-    word: ShuffledWord;
-    source: 'bank' | 'slot';
-    sourceIndex?: number;
-    startX: number;
-    startY: number;
-    currentX: number;
-    currentY: number;
-    isDragging: boolean;
-  } | null>(null);
-
-  const getTargetSentence = (sampleAnswer: string): string => {
-    const match = sampleAnswer.match(/^[^.!?]+[.!?]?/);
-    return match ? match[0].trim() : sampleAnswer.trim();
-  };
-
-  const handleReset = () => {
-    const activeWritingTask = revision.writingChallenge[0];
-    if (activeWritingTask) {
-      const targetSentence = getTargetSentence(activeWritingTask.sampleAnswer);
-      const words = targetSentence.split(/\s+/).filter(Boolean).map((word, idx) => ({
-        id: `${word}-${idx}-${revision.id}`,
-        text: word
-      }));
-      
-      let shuffled = [...words];
-      let attempt = 0;
-      while (attempt < 10) {
-        shuffled.sort(() => Math.random() - 0.5);
-        if (shuffled.map(w => w.text).join(' ') !== targetSentence && words.length > 1) {
-          break;
-        }
-        attempt++;
-      }
-      
-      setSentenceWords(shuffled);
-      setPlacedSentenceWords(Array(words.length).fill(null));
-      setCheckedResult(null);
-    }
-  };
-
-  const handleCheckAnswer = () => {
-    const activeWritingTask = revision.writingChallenge[0];
-    if (!activeWritingTask) return;
-
-    const targetSentence = getTargetSentence(activeWritingTask.sampleAnswer);
-    const currentSentence = placedSentenceWords
-      .map(w => w?.text || '')
-      .join(' ')
-      .trim();
-    
-    const normalize = (str: string) => str.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "").replace(/\s+/g, " ").trim();
-    const isCorrect = normalize(currentSentence) === normalize(targetSentence);
-
-    setCheckedResult({
-      isChecked: true,
-      isCorrect
-    });
-
-    if (isCorrect) {
-      setAiEvaluations(prev => ({
-        ...prev,
-        [activeWritingTask.id]: {
-          score: 10,
-          overallFeedback: "Sắp xếp câu chính xác! Con học ngữ pháp rất giỏi.",
-          corrections: []
-        }
-      }));
-      setWritingInputs(prev => ({
-        ...prev,
-        [activeWritingTask.id]: currentSentence
-      }));
-    }
-  };
-
-  const handleShowCorrectAnswer = () => {
-    const activeWritingTask = revision.writingChallenge[0];
-    if (!activeWritingTask) return;
-
-    const targetSentence = getTargetSentence(activeWritingTask.sampleAnswer);
-    const words = targetSentence.split(/\s+/).filter(Boolean).map((word, idx) => ({
-      id: `${word}-${idx}-${revision.id}`,
-      text: word
-    }));
-
-    setPlacedSentenceWords(words);
-    setSentenceWords([]);
-    setCheckedResult({
-      isChecked: true,
-      isCorrect: true
-    });
-    setAiEvaluations(prev => ({
-      ...prev,
-      [activeWritingTask.id]: {
-        score: 10,
-        overallFeedback: "Đáp án đúng đã được hiển thị.",
-        corrections: []
-      }
-    }));
-    setWritingInputs(prev => ({
-      ...prev,
-      [activeWritingTask.id]: targetSentence
-    }));
-  };
-
-  const handlePointerDown = (e: React.PointerEvent, word: ShuffledWord, source: 'bank' | 'slot', sourceIndex?: number) => {
-    e.currentTarget.releasePointerCapture(e.pointerId);
-    setDragState({
-      word,
-      source,
-      sourceIndex,
-      startX: e.clientX,
-      startY: e.clientY,
-      currentX: e.clientX,
-      currentY: e.clientY,
-      isDragging: false
-    });
-  };
-
-  useEffect(() => {
-    if (!dragState) return;
-
-    const handlePointerMove = (e: PointerEvent) => {
-      setDragState(prev => {
-        if (!prev) return null;
-        const dist = Math.hypot(e.clientX - prev.startX, e.clientY - prev.startY);
-        const isDragging = prev.isDragging || dist > 5;
-        return {
-          ...prev,
-          currentX: e.clientX,
-          currentY: e.clientY,
-          isDragging
-        };
-      });
-    };
-
-    const handlePointerUp = (e: PointerEvent) => {
-      if (!dragState) return;
-      
-      const isDrag = dragState.isDragging;
-      const word = dragState.word;
-      const source = dragState.source;
-      const sourceIdx = dragState.sourceIndex;
-
-      setDragState(null);
-
-      if (!isDrag) {
-        if (source === 'bank') {
-          setPlacedSentenceWords(prev => {
-            const next = [...prev];
-            const firstEmpty = next.indexOf(null);
-            if (firstEmpty !== -1) {
-              next[firstEmpty] = word;
-              setSentenceWords(bank => bank.filter(w => w.id !== word.id));
-            }
-            return next;
-          });
-        } else if (source === 'slot' && sourceIdx !== undefined) {
-          setPlacedSentenceWords(prev => {
-            const next = [...prev];
-            next[sourceIdx] = null;
-            return next;
-          });
-          setSentenceWords(bank => [...bank, word]);
-        }
-        return;
-      }
-
-      const element = document.elementFromPoint(e.clientX, e.clientY);
-      let dropzoneSlotStr: string | null = null;
-      let isBankDropzone = false;
-
-      let curr: Element | null = element;
-      while (curr) {
-        if (curr.getAttribute('data-slot-index')) {
-          dropzoneSlotStr = curr.getAttribute('data-slot-index');
-          break;
-        }
-        if (curr.getAttribute('data-dropzone-bank')) {
-          isBankDropzone = true;
-          break;
-        }
-        curr = curr.parentElement;
-      }
-
-      if (dropzoneSlotStr !== null) {
-        const targetIdx = parseInt(dropzoneSlotStr, 10);
-        
-        setPlacedSentenceWords(prev => {
-          const next = [...prev];
-          const existingWordAtTarget = next[targetIdx];
-
-          if (source === 'bank') {
-            next[targetIdx] = word;
-            if (existingWordAtTarget) {
-              setSentenceWords(bank => [...bank.filter(w => w.id !== word.id), existingWordAtTarget]);
-            } else {
-              setSentenceWords(bank => bank.filter(w => w.id !== word.id));
-            }
-          } else if (source === 'slot' && sourceIdx !== undefined) {
-            next[sourceIdx] = existingWordAtTarget;
-            next[targetIdx] = word;
-          }
-          return next;
-        });
-      } else if (isBankDropzone || source === 'slot') {
-        if (source === 'slot' && sourceIdx !== undefined) {
-          setPlacedSentenceWords(prev => {
-            const next = [...prev];
-            next[sourceIdx] = null;
-            return next;
-          });
-          setSentenceWords(bank => {
-            if (bank.some(w => w.id === word.id)) return bank;
-            return [...bank, word];
-          });
-        }
-      }
-    };
-
-    window.addEventListener('pointermove', handlePointerMove);
-    window.addEventListener('pointerup', handlePointerUp);
-
-    return () => {
-      window.removeEventListener('pointermove', handlePointerMove);
-      window.removeEventListener('pointerup', handlePointerUp);
-    };
-  }, [dragState]);
-
-  // Initialize Sentence Ordering Exercise
-  useEffect(() => {
-    if (activeStage === 3 && activeTaskIndex === 0) {
-      const activeWritingTask = revision.writingChallenge[0];
-      if (activeWritingTask) {
-        const targetSentence = getTargetSentence(activeWritingTask.sampleAnswer);
-        const words = targetSentence.split(/\s+/).filter(Boolean).map((word, idx) => ({
-          id: `${word}-${idx}-${revision.id}`,
-          text: word
-        }));
-        
-        let shuffled = [...words];
-        let attempt = 0;
-        while (attempt < 10) {
-          shuffled.sort(() => Math.random() - 0.5);
-          if (shuffled.map(w => w.text).join(' ') !== targetSentence && words.length > 1) {
-            break;
-          }
-          attempt++;
-        }
-        
-        setSentenceWords(shuffled);
-        setPlacedSentenceWords(Array(words.length).fill(null));
-        setCheckedResult(null);
-      }
-    }
-  }, [revision.id, activeTaskIndex, activeStage]);
+  // --- Task 1 Multi-Sentence Workflow State ---
+  const [task1QuestionIndex, setTask1QuestionIndex] = useState(0);
 
   // Reset all states when active revision changes
   useEffect(() => {
@@ -337,6 +74,7 @@ export default function RevisionView({
 
     // Stage 3 resets
     setActiveTaskIndex(0);
+    setTask1QuestionIndex(0);
     setWritingInputs({});
     setIsEvaluating(false);
     setAiEvaluations({});
@@ -402,69 +140,99 @@ export default function RevisionView({
 
   // Handle Stage 3 logic (AI Writing Evaluation)
   const activeWritingTask = revision.writingChallenge[activeTaskIndex] || revision.writingChallenge[0];
+  const task1Questions = getTask1Questions(revision.id, revision.writingChallenge[0]);
+  const currentTask1Question = task1Questions[task1QuestionIndex];
 
   const handleWritingInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const text = e.target.value;
-    setWritingInputs(prev => ({ ...prev, [activeWritingTask.id]: text }));
+    const activeId = activeTaskIndex === 0 ? currentTask1Question.id : activeWritingTask.id;
+    setWritingInputs(prev => ({ ...prev, [activeId]: text }));
   };
 
   const handleAIEvaluate = async () => {
-    const studentText = writingInputs[activeWritingTask.id];
-    if (!studentText || studentText.trim() === "") return;
+    if (activeTaskIndex === 0) {
+      const studentText = writingInputs[currentTask1Question.id];
+      if (!studentText || studentText.trim() === "") return;
 
-    setIsEvaluating(true);
+      setIsEvaluating(true);
 
-    try {
-      const response = await fetch("/api/ai/evaluate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          taskType: activeWritingTask.type,
-          taskDescription: activeWritingTask.prompt,
-          studentText: studentText
-        })
-      });
+      try {
+        const response = await fetch("/api/ai/evaluate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            taskType: currentTask1Question.type,
+            taskDescription: currentTask1Question.prompt,
+            studentText: studentText
+          })
+        });
 
-      if (!response.ok) {
-        throw new Error("Evaluation request failed");
-      }
-
-      const data = await response.json();
-      setAiEvaluations(prev => ({ ...prev, [activeWritingTask.id]: data }));
-
-    } catch (error) {
-      console.error("AI Evaluation error:", error);
-      // Fallback
-      setAiEvaluations(prev => ({
-        ...prev,
-        [activeWritingTask.id]: {
-          score: 8,
-          overallFeedback: "Bài viết xuất sắc! Hệ thống tạm thời đang tải chậm, nhưng cô giáo LeeGo nhận định con đã diễn đạt ý rất trôi chảy.",
-          corrections: [
-            {
-              original: studentText,
-              corrected: studentText,
-              grammarRule: "Grammar & Vocab Choice",
-              explanation: "Con đã viết rất bám sát từ gợi ý. Rất đáng yêu!",
-              memoryTip: "Hãy tiếp tục viết thật nhiều câu tiếng Anh mỗi ngày nhé!",
-              encouragement: "Cô giáo chúc mừng con nha! Tiếp tục hoàn thành chặng thi nhé! 🎉"
-            }
-          ]
+        if (!response.ok) {
+          throw new Error("Evaluation request failed");
         }
-      }));
-    } finally {
+
+        const data = await response.json();
+        setAiEvaluations(prev => ({ ...prev, [currentTask1Question.id]: data }));
+
+      } catch (error) {
+        console.error("AI Evaluation error:", error);
+        // Fallback
+        setAiEvaluations(prev => ({
+          ...prev,
+          [currentTask1Question.id]: {
+            score: 8,
+            overallFeedback: "Bài viết xuất sắc! Hệ thống tạm thời đang tải chậm, nhưng cô giáo LeeGo nhận định con đã diễn đạt ý rất trôi chảy.",
+            corrections: [
+              {
+                original: studentText,
+                corrected: studentText,
+                grammarRule: "Grammar & Vocab Choice",
+                explanation: "Con đã viết rất bám sát từ gợi ý. Rất đáng yêu!",
+                memoryTip: "Hãy tiếp tục viết thật nhiều câu tiếng Anh mỗi ngày nhé!",
+                encouragement: "Cô giáo chúc mừng con nha! Tiếp tục hoàn thành chặng thi nhé! 🎉"
+              }
+            ]
+          }
+        }));
+      } finally {
+        setIsEvaluating(false);
+      }
+    } else {
+      // Task 2: Vietnamese -> English translation with Simple AI evaluation model (local)
+      const studentText = writingInputs[activeWritingTask.id];
+      if (!studentText || studentText.trim() === "") return;
+
+      setIsEvaluating(true);
+
+      const translation = getTranslationTask(revision.id);
+      const data = evaluateTranslation(studentText, translation.correctAnswers);
+
+      // Simulate a small delay for a premium feel
+      await new Promise(resolve => setTimeout(resolve, 800));
+
+      setAiEvaluations(prev => ({ ...prev, [activeWritingTask.id]: data }));
       setIsEvaluating(false);
     }
   };
 
   // Complete entire Revision and earn rewards!
   const handleFinishRevision = () => {
-    // Stage 1 score: max 20. Stage 2 score: max 8-10. Stage 3 score (taken from AI): max 10.
     const grammarPoints = stage1Score;
     const readingPoints = stage2Score;
-    const activeTaskEval = aiEvaluations[activeWritingTask.id];
-    const writingPoints = activeTaskEval ? activeTaskEval.score : 8; // default to 8 if skipped
-    
+
+    // Task 1 (Q1, Q2, Q3) average score out of 10
+    const q1 = aiEvaluations[task1Questions[0].id]?.score || 8;
+    const q2 = aiEvaluations[task1Questions[1].id]?.score || 8;
+    const q3 = aiEvaluations[task1Questions[2].id]?.score || 8;
+    const task1Score = (q1 + q2 + q3) / 3;
+
+    // Task 2 translation score out of 100, scaled to 10
+    const task2Task = revision.writingChallenge[1] || revision.writingChallenge[0];
+    const task2Score = (aiEvaluations[task2Task.id]?.score || 80) / 10;
+
+    // Final stage 3 points (average out of 10)
+    const writingPoints = (task1Score + task2Score) / 2;
+
     const totalScore = Math.round(((grammarPoints + readingPoints + writingPoints) / 38) * 10);
 
     // Reward: 200 XP for completing a revision challenge, plus stars
@@ -784,20 +552,26 @@ export default function RevisionView({
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] bg-amber-100 text-amber-800 font-black px-2 py-0.5 rounded-full tracking-wider uppercase">
-                    {activeWritingTask.type} task
+                    {activeWritingTask.type} task {activeTaskIndex === 0 && `(Câu ${task1QuestionIndex + 1}/3)`}
                   </span>
                   <h3 className="text-sm font-black text-slate-800">{activeWritingTask.title}</h3>
                 </div>
 
                 <div className="p-4 bg-amber-50/20 border border-amber-100 rounded-xl space-y-3">
                   <p className="text-xs font-semibold text-slate-600 leading-relaxed">
-                    📝 <strong className="text-slate-800">Đề bài (Prompt):</strong> {activeWritingTask.prompt}
+                    📝 <strong className="text-slate-800">Đề bài (Prompt):</strong> {activeTaskIndex === 0 ? currentTask1Question.prompt : `Hãy dịch câu tiếng Việt sau sang tiếng Anh:`}
                   </p>
                   
-                  {activeWritingTask.helperWords && (
+                  {activeTaskIndex === 1 && (
+                    <p className="text-sm font-black text-slate-800 bg-white p-3 rounded-lg border border-slate-100 mt-2 select-text">
+                      👉 {getTranslationTask(revision.id).vietnamese}
+                    </p>
+                  )}
+                  
+                  {((activeTaskIndex === 0 ? currentTask1Question.helperWords : activeWritingTask.helperWords)) && (
                     <div className="flex flex-wrap gap-1.5 pt-1.5 border-t border-amber-100/30">
                       <span className="text-[9px] text-amber-700 font-extrabold uppercase block w-full">Từ vựng gợi ý (Vocabulary help):</span>
-                      {activeWritingTask.helperWords.map((word, i) => (
+                      {(activeTaskIndex === 0 ? currentTask1Question.helperWords : activeWritingTask.helperWords)?.map((word, i) => (
                         <span key={i} className="text-[10px] font-bold bg-white text-slate-600 px-2 py-0.5 rounded-full border border-slate-100">
                           {word}
                         </span>
@@ -810,168 +584,52 @@ export default function RevisionView({
                 <div className="space-y-1">
                   <p className="text-[10px] text-slate-400 font-bold uppercase leading-none">Đáp án mẫu tham khảo (Sample Answer):</p>
                   <p className="bg-slate-50 rounded-lg p-2.5 border border-slate-100 text-[11px] font-semibold text-slate-500 italic leading-relaxed select-text">
-                    {activeWritingTask.sampleAnswer}
+                    {activeTaskIndex === 0 ? currentTask1Question.sampleAnswer : activeWritingTask.sampleAnswer}
                   </p>
                 </div>
               </div>
 
-              {/* Student text input area / Drag and Drop */}
-              {activeTaskIndex === 0 ? (
-                /* Sentence Ordering Exercise (Task 1) */
-                <div className="flex flex-col space-y-4 select-none">
-                  <div className="space-y-2">
-                    <label className="text-[10px] text-slate-400 font-black uppercase tracking-wider block">
-                      Sắp xếp các từ thành câu đúng (Drag & Drop or Tap words):
-                    </label>
-                    
-                    {/* Target Area Slots */}
-                    <div 
-                      className="min-h-[100px] p-4 bg-slate-50 border border-dashed border-slate-200 rounded-2xl flex flex-wrap gap-2 items-center content-center relative animate-fade-in"
-                    >
-                      {placedSentenceWords.map((word, idx) => (
-                        <div
-                          key={`slot-${idx}`}
-                          data-slot-index={idx}
-                          className={`min-w-[60px] h-[36px] rounded-xl flex items-center justify-center transition-all ${
-                            word 
-                              ? 'bg-amber-100 border border-amber-300 text-slate-800 font-bold text-xs px-3 shadow-sm cursor-grab active:cursor-grabbing'
-                              : 'bg-slate-100/50 border border-dashed border-slate-200 text-slate-300'
-                          } ${
-                            dragState?.source === 'slot' && dragState?.sourceIndex === idx && dragState.isDragging ? 'opacity-30' : ''
-                          }`}
-                          style={{ touchAction: 'none' }}
-                          onPointerDown={(e) => word && !checkedResult?.isCorrect && handlePointerDown(e, word, 'slot', idx)}
-                        >
-                          {word ? word.text : ''}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Word Bank Area */}
-                  <div className="space-y-2">
-                    <label className="text-[10px] text-slate-400 font-black uppercase tracking-wider block">
-                      Kho từ vựng (Word Bank):
-                    </label>
-                    <div
-                      data-dropzone-bank="true"
-                      className="min-h-[80px] p-4 bg-white border border-slate-100 rounded-2xl flex flex-wrap gap-2 items-center justify-center content-center"
-                    >
-                      {sentenceWords.map((word) => {
-                        const isBeingDragged = dragState?.word.id === word.id && dragState.isDragging;
-                        return (
-                          <div
-                            key={word.id}
-                            className={`bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 font-bold text-xs px-3 py-2 rounded-xl shadow-xs cursor-grab active:cursor-grabbing transition-all select-none ${
-                              isBeingDragged ? 'opacity-30' : ''
-                            }`}
-                            style={{ touchAction: 'none' }}
-                            onPointerDown={(e) => !checkedResult?.isCorrect && handlePointerDown(e, word, 'bank')}
-                          >
-                            {word.text}
-                          </div>
-                        );
-                      })}
-                      {sentenceWords.length === 0 && placedSentenceWords.filter(Boolean).length === 0 && (
-                        <span className="text-slate-300 text-xs italic">Không có từ nào</span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Feedback Message */}
-                  {checkedResult && (
-                    <div 
-                      className={`p-3.5 rounded-xl border text-xs font-bold transition-all flex items-center gap-2 ${
-                        checkedResult.isCorrect 
-                          ? 'bg-emerald-50 border-emerald-100 text-emerald-800' 
-                          : 'bg-red-50 border-red-100 text-red-800'
-                      }`}
-                    >
-                      {checkedResult.isCorrect ? (
-                        <>
-                          <Check size={16} className="text-emerald-500 shrink-0" />
-                          <span>Chính xác! Con đã hoàn thành xuất sắc thử thách này! (+10 điểm)</span>
-                        </>
-                      ) : (
-                        <>
-                          <X size={16} className="text-red-500 shrink-0" />
-                          <span>Chưa chính xác, hãy bấm Reset hoặc thay đổi vị trí từ để thử lại nhé!</span>
-                        </>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Action Buttons */}
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      onClick={handleReset}
-                      disabled={checkedResult?.isCorrect}
-                      className="flex-1 min-w-[80px] bg-slate-100 hover:bg-slate-200 disabled:opacity-50 text-slate-700 font-bold text-xs py-3 rounded-xl transition-all flex items-center justify-center gap-1"
-                    >
-                      <RotateCcw size={14} />
-                      <span>Làm lại (Reset)</span>
-                    </button>
-                    
-                    <button
-                      onClick={handleCheckAnswer}
-                      disabled={placedSentenceWords.includes(null) || checkedResult?.isCorrect}
-                      className="flex-1 min-w-[120px] bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-black text-xs py-3 rounded-xl transition-all shadow-md flex items-center justify-center gap-1"
-                    >
-                      <Check size={14} />
-                      <span>Kiểm tra (Check)</span>
-                    </button>
-
-                    <button
-                      onClick={handleShowCorrectAnswer}
-                      disabled={checkedResult?.isCorrect}
-                      className="w-full sm:w-auto bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 font-extrabold text-xs py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-1"
-                    >
-                      <HelpCircle size={14} />
-                      <span>Đáp án đúng (Answer)</span>
-                    </button>
-                  </div>
+              {/* Student text input area */}
+              <div className="flex flex-col space-y-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] text-slate-400 font-black uppercase tracking-wider block">
+                    BÀI VIẾT CỦA CON (YOUR WRITING TEXT):
+                  </label>
+                  <textarea
+                    disabled={isEvaluating}
+                    rows={5}
+                    value={writingInputs[activeTaskIndex === 0 ? currentTask1Question.id : activeWritingTask.id] || ''}
+                    onChange={handleWritingInputChange}
+                    placeholder={activeTaskIndex === 0 ? "Hãy gõ câu viết của con bằng tiếng Anh tại đây..." : "Gõ câu dịch tiếng Anh của con tại đây..."}
+                    className="w-full p-4 rounded-xl border border-slate-200/80 font-medium text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/15 focus:border-amber-500 text-slate-700 select-text bg-white"
+                  />
                 </div>
-              ) : (
-                /* Student text input area and AI button (Task 2) */
-                <div className="flex flex-col space-y-4">
-                  <div className="space-y-1">
-                    <label className="text-[10px] text-slate-400 font-black uppercase tracking-wider block">BÀI VIẾT CỦA CON (YOUR WRITING TEXT):</label>
-                    <textarea
-                      disabled={isEvaluating}
-                      rows={5}
-                      value={writingInputs[activeWritingTask.id] || ''}
-                      onChange={handleWritingInputChange}
-                      placeholder="Hãy gõ câu viết của con bằng tiếng Anh tại đây..."
-                      className="w-full p-4 rounded-xl border border-slate-200/80 font-medium text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/15 focus:border-amber-500 text-slate-700 select-text bg-white"
-                    />
-                  </div>
 
-                  <div className="flex gap-2">
-                    <button
-                      disabled={isEvaluating || !writingInputs[activeWritingTask.id] || writingInputs[activeWritingTask.id].trim() === ""}
-                      onClick={handleAIEvaluate}
-                      className="flex-1 bg-amber-500 hover:bg-amber-600 disabled:opacity-40 text-white font-black text-xs py-3 rounded-xl transition-all shadow-md flex items-center justify-center gap-1.5"
-                    >
-                      {isEvaluating ? (
-                        <>
-                          <Loader2 size={16} className="animate-spin" />
-                          <span>LeeGo AI Tutor đang chấm...</span>
-                        </>
-                      ) : (
-                        <>
-                          <BrainCircuit size={16} />
-                          <span>Chấm Điểm Với LeeGo AI Tutor 🌟</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
+                <div className="flex gap-2">
+                  <button
+                    disabled={isEvaluating || !(writingInputs[activeTaskIndex === 0 ? currentTask1Question.id : activeWritingTask.id]) || (writingInputs[activeTaskIndex === 0 ? currentTask1Question.id : activeWritingTask.id] || '').trim() === ""}
+                    onClick={handleAIEvaluate}
+                    className="flex-1 bg-amber-500 hover:bg-amber-600 disabled:opacity-40 text-white font-black text-xs py-3 rounded-xl transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    {isEvaluating ? (
+                      <>
+                        <Loader2 size={16} className="animate-spin" />
+                        <span>LeeGo AI Tutor đang chấm...</span>
+                      </>
+                    ) : (
+                      <>
+                        <BrainCircuit size={16} />
+                        <span>Chấm Điểm Với LeeGo AI Tutor 🌟</span>
+                      </>
+                    )}
+                  </button>
                 </div>
-              )}
+              </div>
             </div>
 
             {/* AI Evaluation parsed response area */}
             <AnimatePresence>
-              {aiEvaluations[activeWritingTask.id] && (
+              {aiEvaluations[activeTaskIndex === 0 ? currentTask1Question.id : activeWritingTask.id] && (
                 <motion.div
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: "auto", opacity: 1 }}
@@ -991,20 +649,41 @@ export default function RevisionView({
                     {/* Grade indicator */}
                     <div className="bg-red-600 text-white font-black text-lg w-12 h-12 rounded-2xl flex flex-col items-center justify-center shadow-md shadow-red-500/10">
                       <span className="text-[8px] leading-none text-red-100 font-extrabold">SCORE</span>
-                      <span className="leading-none mt-0.5">{aiEvaluations[activeWritingTask.id].score}/10</span>
+                      <span className="leading-none mt-0.5">
+                        {aiEvaluations[activeTaskIndex === 0 ? currentTask1Question.id : activeWritingTask.id].score}
+                        {activeTaskIndex === 1 ? '/100' : '/10'}
+                      </span>
                     </div>
                   </div>
 
                   {/* Feedback Text */}
                   <p className="text-slate-600 leading-relaxed font-semibold text-xs italic bg-amber-50/30 p-3 rounded-xl border border-amber-100/30">
-                    🍀 {aiEvaluations[activeWritingTask.id].overallFeedback}
+                    🍀 {aiEvaluations[activeTaskIndex === 0 ? currentTask1Question.id : activeWritingTask.id].overallFeedback}
                   </p>
 
+                  {/* Task 2 Score Breakdown */}
+                  {activeTaskIndex === 1 && (
+                    <div className="grid grid-cols-3 gap-2 text-center text-[10px] font-bold">
+                      <div className="bg-slate-50 p-2 rounded-lg border border-slate-100">
+                        <span className="text-slate-400 block uppercase">Grammar</span>
+                        <span className="text-slate-700 font-black text-xs">{(aiEvaluations[activeWritingTask.id] as any).grammarScore}/100</span>
+                      </div>
+                      <div className="bg-slate-50 p-2 rounded-lg border border-slate-100">
+                        <span className="text-slate-400 block uppercase">Vocabulary</span>
+                        <span className="text-slate-700 font-black text-xs">{(aiEvaluations[activeWritingTask.id] as any).vocabScore}/100</span>
+                      </div>
+                      <div className="bg-slate-50 p-2 rounded-lg border border-slate-100">
+                        <span className="text-slate-400 block uppercase">Structure</span>
+                        <span className="text-slate-700 font-black text-xs">{(aiEvaluations[activeWritingTask.id] as any).structureScore}/100</span>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Corrections Loop */}
-                  {aiEvaluations[activeWritingTask.id].corrections.length > 0 ? (
+                  {aiEvaluations[activeTaskIndex === 0 ? currentTask1Question.id : activeWritingTask.id].corrections.length > 0 ? (
                     <div className="space-y-3 pt-1">
                       <h5 className="text-[10px] text-slate-400 font-extrabold uppercase block tracking-wider">Chi tiết sửa lỗi (Corrections):</h5>
-                      {aiEvaluations[activeWritingTask.id].corrections.map((corr, cIdx) => (
+                      {aiEvaluations[activeTaskIndex === 0 ? currentTask1Question.id : activeWritingTask.id].corrections.map((corr, cIdx) => (
                         <div key={cIdx} className="bg-white rounded-xl p-4 border border-slate-100 space-y-3 shadow-sm shadow-slate-100/50">
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                             <div className="space-y-1 bg-red-50/20 border border-red-100/30 p-2.5 rounded-lg">
@@ -1046,6 +725,29 @@ export default function RevisionView({
                       <p className="text-slate-400 font-semibold">Bài viết của con hoàn hảo chuẩn Movers rồi đó, cô LeeGo rất tự hào!</p>
                     </div>
                   )}
+
+                  {/* Task 1 Sequential buttons inside evaluation card */}
+                  {activeTaskIndex === 0 && (
+                    <div className="pt-4 border-t border-slate-100 flex justify-end">
+                      {task1QuestionIndex < 2 ? (
+                        <button
+                          onClick={() => setTask1QuestionIndex(prev => prev + 1)}
+                          className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs px-6 py-2.5 rounded-xl transition-colors shadow-sm flex items-center gap-1 cursor-pointer"
+                        >
+                          <span>Câu tiếp theo</span>
+                          <ChevronRight size={14} />
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => setActiveTaskIndex(1)}
+                          className="bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs px-6 py-2.5 rounded-xl transition-colors shadow-sm flex items-center gap-1 cursor-pointer"
+                        >
+                          <span>Hoàn thành Task 1</span>
+                          <Check size={14} />
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>
@@ -1066,21 +768,6 @@ export default function RevisionView({
             </button>
           </div>
         </motion.div>
-      )}
-      {dragState && dragState.isDragging && (
-        <div
-          style={{
-            position: 'fixed',
-            left: dragState.currentX,
-            top: dragState.currentY,
-            transform: 'translate(-50%, -50%)',
-            pointerEvents: 'none',
-            zIndex: 9999,
-          }}
-          className="bg-amber-100 border border-amber-300 text-slate-800 px-3 py-1.5 rounded-lg text-xs font-bold shadow-xl whitespace-nowrap"
-        >
-          {dragState.word.text}
-        </div>
       )}
     </div>
   );
