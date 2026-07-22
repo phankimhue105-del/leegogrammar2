@@ -226,7 +226,271 @@ export const getTask1Questions = (revisionId: string, baseTask: WritingChallenge
     { id: baseTask.id + 200, type: baseTask.type, title: baseTask.title + " (Q3)", ...extraQuestions[1] }
   ];
 };
+export interface TranslationTask {
+  id: number;
+  vietnamese: string;
+  correctAnswers: string[];
+}
 
+export const getTask2Questions = (revisionId: string): TranslationTask[] => {
+  const data: Record<string, { vietnamese: string; correctAnswers: string[] }[]> = {
+    'mini-1-3': [
+      {
+        vietnamese: "Những đứa trẻ đang chơi với những đồ chơi mới của chúng.",
+        correctAnswers: [
+          "The children are playing with their new toys.",
+          "Children are playing with their new toys.",
+          "The children are playing with new toys."
+        ]
+      },
+      {
+        vietnamese: "Có ba chiếc hộp và năm chiếc chìa khóa ở trên bàn.",
+        correctAnswers: [
+          "There are three boxes and five keys on the table.",
+          "There are 3 boxes and 5 keys on the table."
+        ]
+      }
+    ],
+    'mini-4-6': [
+      {
+        vietnamese: "Anh ấy đang dắt con chó của anh ấy đi dạo trong công viên.",
+        correctAnswers: [
+          "He is walking his dog in the park.",
+          "He is taking his dog for a walk in the park."
+        ]
+      },
+      {
+        vietnamese: "Họ yêu thích ngôi nhà mới của họ vì nó rất đẹp.",
+        correctAnswers: [
+          "They love their new house because it is very beautiful.",
+          "They like their new house because it is very beautiful.",
+          "They love their new house because it is beautiful."
+        ]
+      }
+    ],
+    'rev-1-6': [
+      {
+        vietnamese: "Chúng tôi yêu ngôi trường tiểu học của chúng tôi.",
+        correctAnswers: [
+          "We love our primary school.",
+          "We love our elementary school."
+        ]
+      },
+      {
+        vietnamese: "Tôi nhìn thấy những con chuột nhỏ dưới giường ngủ.",
+        correctAnswers: [
+          "I see small mice under the bed.",
+          "I see little mice under the bed.",
+          "I see some small mice under the bed."
+        ]
+      }
+    ],
+    'mini-7-10': [
+      {
+        vietnamese: "Những con khỉ đang leo trèo trên cây lúc này.",
+        correctAnswers: [
+          "The monkeys are climbing the trees right now.",
+          "Monkeys are climbing on trees right now.",
+          "The monkeys are climbing trees at the moment."
+        ]
+      },
+      {
+        vietnamese: "Mẹ tôi đang nấu bữa tối trong bếp vào lúc này.",
+        correctAnswers: [
+          "My mother is cooking dinner in the kitchen at the moment.",
+          "My mom is cooking dinner in the kitchen right now.",
+          "My mother is cooking dinner in the kitchen right now."
+        ]
+      }
+    ],
+    'rev-7-10': [
+      {
+        vietnamese: "Cô ấy luôn luôn uống sữa vào buổi sáng.",
+        correctAnswers: [
+          "She always drinks milk in the morning.",
+          "She always has milk in the morning."
+        ]
+      },
+      {
+        vietnamese: "Trời đang mưa rất to bên ngoài vào lúc này.",
+        correctAnswers: [
+          "It is raining very hard outside right now.",
+          "It is raining heavily outside at the moment.",
+          "It is raining hard outside right now."
+        ]
+      }
+    ],
+    'mini-11-13': [
+      {
+        vietnamese: "Họ không phải đang xem tivi trong phòng khách.",
+        correctAnswers: [
+          "They are not watching television in the living room.",
+          "They are not watching TV in the living room.",
+          "They aren't watching TV in the living room."
+        ]
+      },
+      {
+        vietnamese: "Bạn đang làm gì trong phòng của bạn thế?",
+        correctAnswers: [
+          "What are you doing in your room?",
+          "What are you doing in your bedroom?"
+        ]
+      }
+    ],
+    'mini-14-15': [
+      {
+        vietnamese: "Con mèo đang ngủ ở bên cạnh cái ghế sofa.",
+        correctAnswers: [
+          "The cat is sleeping next to the sofa.",
+          "The cat is sleeping beside the sofa."
+        ]
+      },
+      {
+        vietnamese: "Quả bóng màu đỏ nằm giữa hai chiếc hộp.",
+        correctAnswers: [
+          "The red ball is between the two boxes.",
+          "The red ball lies between two boxes."
+        ]
+      }
+    ],
+    'rev-11-15': [
+      {
+        vietnamese: "Họ đang ngồi dưới một cái cây lớn trong vườn.",
+        correctAnswers: [
+          "They are sitting under a big tree in the garden.",
+          "They are sitting under a large tree in the garden."
+        ]
+      },
+      {
+        vietnamese: "Có một chiếc xe hơi màu xanh ở đằng trước ngôi nhà.",
+        correctAnswers: [
+          "There is a blue car in front of the house.",
+          "There is a blue car parked in front of the house."
+        ]
+      }
+    ],
+    'rev-16-18': [
+      {
+        vietnamese: "Hôm qua chúng tôi đã đi đến rạp chiếu phim và xem một bộ phim hay.",
+        correctAnswers: [
+          "Yesterday we went to the cinema and watched a good movie.",
+          "We went to the movie theater and watched a good movie yesterday.",
+          "We went to the cinema and saw a good film yesterday."
+        ]
+      },
+      {
+        vietnamese: "Anh ấy đã không mua món đồ chơi mới đó tuần trước.",
+        correctAnswers: [
+          "He did not buy that new toy last week.",
+          "He didn't buy that new toy last week."
+        ]
+      }
+    ],
+    'rev-19-20': [
+      {
+        vietnamese: "Chúng tôi dự định sẽ đến thăm bà của chúng tôi vào cuối tuần tới.",
+        correctAnswers: [
+          "We are going to visit our grandmother next weekend.",
+          "We are going to visit our grandma next weekend.",
+          "We plan to visit our grandmother next weekend."
+        ]
+      },
+      {
+        vietnamese: "Tôi nghĩ trời sẽ mưa vào ngày mai.",
+        correctAnswers: [
+          "I think it will rain tomorrow.",
+          "I think that it will rain tomorrow."
+        ]
+      }
+    ],
+    'rev-21': [
+      {
+        vietnamese: "Bạn nên ăn nhiều rau xanh và trái cây mỗi ngày.",
+        correctAnswers: [
+          "You should eat more green vegetables and fruits every day.",
+          "You should eat lots of green vegetables and fruit daily.",
+          "You should eat more vegetables and fruits every day."
+        ]
+      },
+      {
+        vietnamese: "Học sinh không được chạy ở trong hành lang trường học.",
+        correctAnswers: [
+          "Students must not run in the school corridor.",
+          "Students mustn't run in the school corridor."
+        ]
+      }
+    ],
+    'mini-22-23': [
+      {
+        vietnamese: "Đây là món đồ chơi mà bố tôi đã mua cho tôi.",
+        correctAnswers: [
+          "This is the toy which my father bought for me.",
+          "This is the toy that my father bought for me.",
+          "This is the toy my dad bought for me."
+        ]
+      },
+      {
+        vietnamese: "Toby là cậu bé chơi bóng đá rất giỏi.",
+        correctAnswers: [
+          "Toby is the boy who plays football very well.",
+          "Toby is the boy that plays football very well.",
+          "Toby is the boy who plays soccer very well."
+        ]
+      }
+    ],
+    'mini-24-26': [
+      {
+        vietnamese: "Tôi đến thư viện để đọc sách vào mỗi Chủ Nhật.",
+        correctAnswers: [
+          "I go to the library to read books every Sunday.",
+          "I go to the library to read books on Sundays.",
+          "I visit the library to read books every Sunday."
+        ]
+      },
+      {
+        vietnamese: "Cô ấy mua bột mì để làm một chiếc bánh kem sinh nhật.",
+        correctAnswers: [
+          "She bought flour to make a birthday cake.",
+          "She bought some flour to make a birthday cake."
+        ]
+      }
+    ],
+    'rev-22-26': [
+      {
+        vietnamese: "Toby là cậu bé người đã đi đến chợ để mua rau.",
+        correctAnswers: [
+          "Toby is the boy who went to the market to buy vegetables.",
+          "Toby is the boy who went to the market to buy some vegetables.",
+          "Toby is the boy that went to the market to buy vegetables."
+        ]
+      },
+      {
+        vietnamese: "Tôi đọc cuốn sách mà bạn đã mua vì nó rất hay.",
+        correctAnswers: [
+          "I read the book which you bought because it is very good.",
+          "I read the book that you bought because it is very good.",
+          "I read the book which you bought because it is interesting."
+        ]
+      }
+    ],
+    'rev-27-28': [
+      {
+        vietnamese: "Anh ấy chạy rất nhanh để bắt chuyến xe buýt trường học.",
+        correctAnswers: [
+          "He ran very quickly to catch the school bus.",
+          "He ran very fast to catch the school bus."
+        ]
+      },
+      {
+        vietnamese: "Người đàn ông lớn tuổi đi bộ chậm rãi qua công viên.",
+        correctAnswers: [
+          "The old man walked slowly through the park.",
+          "The old man walked slowly across the park."
+        ]
+      }
+    ],
+    'final-revision': [
+      {
         vietnamese: "Bây giờ tôi có thể viết các câu tiếng Anh một cách cẩn thận.",
         correctAnswers: [
           "Now I can write English sentences carefully.",
@@ -244,7 +508,7 @@ export const getTask1Questions = (revisionId: string, baseTask: WritingChallenge
     ]
   };
 
-  return data[revisionId] || [
+  const questions = data[revisionId] || [
     {
       vietnamese: "Họ học tiếng Anh tại trung tâm LeeGo.",
       correctAnswers: [
@@ -260,6 +524,11 @@ export const getTask1Questions = (revisionId: string, baseTask: WritingChallenge
       ]
     }
   ];
+
+  return questions.map((q, idx) => ({
+    ...q,
+    id: 3000 + idx
+  }));
 };
 
 export function evaluateTranslation(
@@ -302,7 +571,7 @@ export function evaluateTranslation(
         score: 99,
         feedback: "Excellent grammar and vocabulary. 1 point was deducted because the sentence is missing the final punctuation mark. Please remember to finish English sentences with appropriate punctuation.",
         overallFeedback: "Excellent grammar and vocabulary. 1 point was deducted because the sentence is missing the final punctuation mark. Please remember to finish English sentences with appropriate punctuation.",
-        isCorrect: true,
+        isCorrect: true, // Mark true for correctness, but penalize points
         grammarScore: 100,
         vocabScore: 100,
         structureScore: 100,
