@@ -1,0 +1,6 @@
+{
+  "name": "LeeGo Grammar Explorer AI",
+  "description": "The official AI Grammar Tutor of LeeGo English Center, Hải Phòng, helping students master English grammar through gamified lessons, snapshots, and AI-powered writing feedback.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
