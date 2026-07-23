@@ -8,6 +8,7 @@ import {
 import { dynamicSyllabus, SyllabusUnit, SyllabusRevision } from './data/syllabus';
 import { StudentProgress, ActiveTab, SoundSettings } from './types';
 import { playSuccessSound as playSuccessCentral, playVictorySound as playVictoryCentral, initAudio } from './utils/audioManager';
+import { AuthService } from './components/auth/AuthService';
 
 // Component Imports
 import WelcomeScreen from './components/WelcomeScreen';
@@ -77,9 +78,43 @@ export default function App() {
     starsEarned: number;
   } | null>(null);
 
+  // Load progress helper from Google Sheets
+  const loadStudentProgress = async (username: string) => {
+    try {
+      const data = await AuthService.getProgress(username);
+      if (data && data.success) {
+        setProgress(prev => {
+          const nextProgress = {
+            ...prev,
+            name: data.studentName || prev.name,
+            stars: data.stars !== undefined ? data.stars : prev.stars,
+            readingProgress: data.reading !== undefined ? data.reading : prev.readingProgress,
+            writingProgress: data.writing !== undefined ? data.writing : prev.writingProgress,
+            studentClass: data.studentClass || prev.studentClass,
+            averageScore: data.average !== undefined ? data.average : prev.averageScore,
+            syllabusProgress: data.syllabus !== undefined ? data.syllabus : prev.syllabusProgress,
+            grammarMastery: data.grammar !== undefined ? data.grammar : prev.grammarMastery,
+          };
+          localStorage.setItem(PROGRESS_STORAGE_KEY, JSON.stringify(nextProgress));
+          return nextProgress;
+        });
+      }
+    } catch (e) {
+      console.warn("Failed to load student progress from server", e);
+    }
+  };
+
   // Load progress on start
   useEffect(() => {
     initAudio();
+
+    // Check for auto login session
+    const savedUsername = localStorage.getItem('username');
+    if (savedUsername) {
+      setShowSplash(false);
+      loadStudentProgress(savedUsername);
+    }
+
     // 1. Load progress
     const storedProgress = localStorage.getItem(PROGRESS_STORAGE_KEY);
     let currentProgress = DEFAULT_PROGRESS;
@@ -127,6 +162,33 @@ export default function App() {
     const nextProgress = { ...progress, ...updated };
     setProgress(nextProgress);
     localStorage.setItem(PROGRESS_STORAGE_KEY, JSON.stringify(nextProgress));
+
+    const username = localStorage.getItem('username');
+    const studentName = localStorage.getItem('studentName') || nextProgress.name;
+    const studentClass = localStorage.getItem('studentClass') || '';
+
+    if (username) {
+      const scoreKeys = Object.keys(nextProgress.scores);
+      const average = scoreKeys.length > 0
+        ? Math.round(scoreKeys.reduce((acc, key) => acc + nextProgress.scores[key], 0) / scoreKeys.length * 10) / 10
+        : 0;
+      const grammar = Math.round((nextProgress.completedUnits.length / 28) * 100);
+      const syllabus = Math.round(
+        ((nextProgress.completedUnits.length + nextProgress.completedRevisions.length) / (28 + 10)) * 100
+      );
+
+      AuthService.saveProgress({
+        username,
+        studentName,
+        studentClass,
+        stars: nextProgress.stars,
+        average,
+        syllabus,
+        grammar,
+        reading: nextProgress.readingProgress,
+        writing: nextProgress.writingProgress
+      });
+    }
   };
 
   const saveSoundSettingsState = (updated: SoundSettings) => {
@@ -283,12 +345,20 @@ export default function App() {
 
   const activeInfo = getCurrentViewInfo();
 
+  const handleLoginSuccess = () => {
+    setShowSplash(false);
+    const savedUsername = localStorage.getItem('username');
+    if (savedUsername) {
+      loadStudentProgress(savedUsername);
+    }
+  };
+
   return (
     <div id="leego-app-root" className="min-h-screen bg-slate-50/50 flex flex-col font-sans text-slate-800">
       {/* 1. Welcome Screen Splash */}
       <AnimatePresence>
         {showSplash && (
-          <WelcomeScreen onComplete={() => setShowSplash(false)} />
+          <WelcomeScreen onComplete={handleLoginSuccess} />
         )}
       </AnimatePresence>
 
