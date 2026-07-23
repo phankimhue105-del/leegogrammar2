@@ -1125,7 +1125,7 @@ export const grammarQuestionsDatabase: Record<number, Omit<Question, 'id'>[]> = 
       hint: "Diễn tả hai mệnh đề có ý tương phản dùng từ nối 'but'."
     },
     {
-      question: "She was very tired ______ she went to bed early.",
+      question: "She went to bed early ______ she was very tired.",
       options: ["because", "but", "and", "or"],
       answer: "because",
       hint: "Mệnh đề chỉ nguyên nhân (vì mệt nên ngủ sớm) dùng từ nối 'because'."
