@@ -25,14 +25,17 @@ export default function LoginPage({ onBack, onLoginSuccess }: LoginPageProps) {
     setErrorMsg('');
 
     try {
-      const success = await AuthService.login(username, password);
-      if (success) {
+      const result = await AuthService.login(username, password);
+      if (result.success) {
+        localStorage.setItem('username', username.trim());
+        localStorage.setItem('studentName', result.studentName || '');
+        localStorage.setItem('studentClass', result.studentClass || '');
         onLoginSuccess();
       } else {
-        setErrorMsg('Tên đăng nhập hoặc mật khẩu không chính xác.');
+        setErrorMsg(result.message || 'Tên đăng nhập hoặc mật khẩu không chính xác.');
       }
     } catch (err) {
-      setErrorMsg('Đã xảy ra lỗi kết nối. Vui lòng thử lại sau.');
+      setErrorMsg('Không thể kết nối tới máy chủ. Vui lòng thử lại.');
     } finally {
       setIsLoading(false);
     }
@@ -127,4 +130,3 @@ export default function LoginPage({ onBack, onLoginSuccess }: LoginPageProps) {
     </div>
   );
 }
-
