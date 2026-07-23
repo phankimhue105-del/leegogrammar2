@@ -18,15 +18,63 @@ function getOrCreateAudioContext(): AudioContext | null {
   return sharedCtx;
 }
 
+// Global unlock event list
+const unlockEvents = ['touchstart', 'touchend', 'mousedown', 'keydown', 'click'];
+let isInitialized = false;
+
+// Remove event listeners once context is running
+function removeUnlockListeners() {
+  if (typeof window === 'undefined') return;
+  unlockEvents.forEach(evt => {
+    window.removeEventListener(evt, handleUnlock, true);
+  });
+  console.log("Unlock event listeners removed because AudioContext is running.");
+}
+
+const handleUnlock = () => {
+  unlockAudio();
+};
+
+// Explicit initialization function to attach window capturing gesture listeners
+export function initAudio() {
+  if (typeof window === 'undefined') return;
+  if (isInitialized) return;
+  isInitialized = true;
+
+  unlockEvents.forEach(evt => {
+    window.addEventListener(evt, handleUnlock, true);
+  });
+  console.log("AudioManager initialized and touch capturing registered.");
+  
+  // Try to unlock immediately if already within a gesture
+  unlockAudio();
+}
+
 // Function to unlock audio on first interaction
 export function unlockAudio() {
   const ctx = getOrCreateAudioContext();
   if (!ctx) return;
   
   if (ctx.state === 'suspended') {
-    ctx.resume().catch(err => {
-      console.warn("Failed to resume AudioContext on gesture:", err);
-    });
+    const resumePromise = ctx.resume();
+    if (resumePromise && typeof resumePromise.then === 'function') {
+      resumePromise.then(() => {
+        if (ctx.state === 'running') {
+          removeUnlockListeners();
+        }
+      }).catch(err => {
+        console.warn("Failed to resume AudioContext on gesture:", err);
+      });
+    } else {
+      // Fallback for older browsers where resume() does not return a Promise
+      setTimeout(() => {
+        if (ctx.state === 'running') {
+          removeUnlockListeners();
+        }
+      }, 100);
+    }
+  } else if (ctx.state === 'running') {
+    removeUnlockListeners();
   }
 
   // Play a silent buffer to satisfy iOS Safari user-gesture requirements
@@ -42,28 +90,6 @@ export function unlockAudio() {
   } catch (e) {
     console.warn("Failed to play silent buffer for unlock:", e);
   }
-}
-
-let isInitialized = false;
-
-// Explicit initialization function to attach window capturing gesture listeners
-export function initAudio() {
-  if (typeof window === 'undefined') return;
-  if (isInitialized) return;
-  isInitialized = true;
-
-  const unlockEvents = ['touchstart', 'touchend', 'mousedown', 'keydown', 'click'];
-  const handleUnlock = () => {
-    unlockAudio();
-    // Remove listeners immediately after first interaction
-    unlockEvents.forEach(evt => {
-      window.removeEventListener(evt, handleUnlock, true);
-    });
-  };
-  unlockEvents.forEach(evt => {
-    window.addEventListener(evt, handleUnlock, true);
-  });
-  console.log("AudioManager initialized and touch capturing registered.");
 }
 
 // Helper to safely play audio nodes synchronously on the shared AudioContext
