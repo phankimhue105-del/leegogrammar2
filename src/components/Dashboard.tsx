@@ -26,17 +26,26 @@ export default function Dashboard({
   const completedUnitCount = progress.completedUnits.length;
   const completedRevisionCount = progress.completedRevisions.length;
   
-  const unitPercentage = Math.round((completedUnitCount / totalUnits) * 100);
+  const unitPercentage = progress.grammarMastery !== undefined
+    ? progress.grammarMastery
+    : Math.round((completedUnitCount / totalUnits) * 100);
+    
   const revisionPercentage = Math.round((completedRevisionCount / totalRevisions) * 100);
-  const overallPercentage = Math.round(
-    ((completedUnitCount + completedRevisionCount) / (totalUnits + totalRevisions)) * 100
-  );
+  
+  const overallPercentage = progress.syllabusProgress !== undefined
+    ? progress.syllabusProgress
+    : Math.round(
+        ((completedUnitCount + completedRevisionCount) / (totalUnits + totalRevisions)) * 100
+      );
 
   // Calculate average score
   const scoreKeys = Object.keys(progress.scores);
-  const averageScore = scoreKeys.length > 0
+  const calculatedAverage = scoreKeys.length > 0
     ? Math.round(scoreKeys.reduce((acc, key) => acc + progress.scores[key], 0) / scoreKeys.length * 10) / 10
     : 0;
+  const averageScore = progress.averageScore !== undefined
+    ? progress.averageScore
+    : calculatedAverage;
 
   // Predefined achievements
   const achievements = [
