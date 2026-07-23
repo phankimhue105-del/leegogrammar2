@@ -108,13 +108,6 @@ export default function App() {
   useEffect(() => {
     initAudio();
 
-    // Check for auto login session
-    const savedUsername = localStorage.getItem('username');
-    if (savedUsername) {
-      setShowSplash(false);
-      loadStudentProgress(savedUsername);
-    }
-
     // 1. Load progress
     const storedProgress = localStorage.getItem(PROGRESS_STORAGE_KEY);
     let currentProgress = DEFAULT_PROGRESS;
