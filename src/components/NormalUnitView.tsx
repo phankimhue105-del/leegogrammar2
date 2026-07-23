@@ -7,6 +7,11 @@ import {
   Rocket, DoorOpen, Footprints, Flame
 } from 'lucide-react';
 import { SyllabusUnit, Question } from '../data/syllabus';
+import { 
+  playSelectionSound as playSelectionCentral, 
+  playCorrectSound as playCorrectCentral, 
+  playIncorrectSound as playIncorrectCentral 
+} from '../utils/audioManager';
 
 interface NormalUnitViewProps {
   unit: SyllabusUnit;
@@ -54,77 +59,17 @@ export default function NormalUnitView({
 
   const playSelectionSound = () => {
     if (!soundEnabled) return;
-    if (typeof window === 'undefined') return;
-    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-    if (!AudioContextClass) return;
-    try {
-      const ctx = new AudioContextClass();
-      const now = ctx.currentTime;
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(600, now);
-      gain.gain.setValueAtTime(0.08, now);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.05);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(now);
-      osc.stop(now + 0.05);
-    } catch (e) {
-      console.warn("Web Audio API blocked or not supported", e);
-    }
+    playSelectionCentral();
   };
 
   const playCorrectSound = () => {
     if (!soundEnabled) return;
-    if (typeof window === 'undefined') return;
-    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-    if (!AudioContextClass) return;
-    try {
-      const ctx = new AudioContextClass();
-      const now = ctx.currentTime;
-      const playNote = (freq: number, startTime: number, duration: number) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(freq, startTime);
-        gain.gain.setValueAtTime(0, startTime);
-        gain.gain.linearRampToValueAtTime(0.12, startTime + 0.03);
-        gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(startTime);
-        osc.stop(startTime + duration);
-      };
-      playNote(587.33, now, 0.25);
-      playNote(880.00, now + 0.08, 0.35);
-    } catch (e) {
-      console.warn("Web Audio API blocked or not supported", e);
-    }
+    playCorrectCentral();
   };
 
   const playIncorrectSound = () => {
     if (!soundEnabled) return;
-    if (typeof window === 'undefined') return;
-    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-    if (!AudioContextClass) return;
-    try {
-      const ctx = new AudioContextClass();
-      const now = ctx.currentTime;
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(220, now);
-      osc.frequency.exponentialRampToValueAtTime(140, now + 0.4);
-      gain.gain.setValueAtTime(0.15, now);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.4);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(now);
-      osc.stop(now + 0.4);
-    } catch (e) {
-      console.warn("Web Audio API blocked or not supported", e);
-    }
+    playIncorrectCentral();
   };
 
   const handleNextQuestion = () => {
