@@ -7,6 +7,7 @@ import {
 
 import { dynamicSyllabus, SyllabusUnit, SyllabusRevision } from './data/syllabus';
 import { StudentProgress, ActiveTab, SoundSettings } from './types';
+import { playSuccessSound as playSuccessCentral, playVictorySound as playVictoryCentral } from './utils/audioManager';
 
 // Component Imports
 import WelcomeScreen from './components/WelcomeScreen';
@@ -44,77 +45,11 @@ const DEFAULT_SOUND_SETTINGS: SoundSettings = {
 
 // Sound Synthesizers using Web Audio API to prevent 404 / media loading errors
 const playSuccessSound = () => {
-  if (typeof window === 'undefined') return;
-  const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-  if (!AudioContextClass) return;
-  
-  try {
-    const ctx = new AudioContextClass();
-    const now = ctx.currentTime;
-    
-    const playNote = (freq: number, startTime: number, duration: number) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(freq, startTime);
-      
-      gain.gain.setValueAtTime(0, startTime);
-      gain.gain.linearRampToValueAtTime(0.15, startTime + 0.05);
-      gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
-      
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      
-      osc.start(startTime);
-      osc.stop(startTime + duration);
-    };
-    
-    playNote(523.25, now, 0.4);        // C5
-    playNote(659.25, now + 0.08, 0.4);  // E5
-    playNote(783.99, now + 0.16, 0.5);  // G5
-    playNote(1046.50, now + 0.24, 0.6); // C6
-  } catch (e) {
-    console.warn("Web Audio API not supported or blocked", e);
-  }
+  playSuccessCentral();
 };
 
 const playVictorySound = () => {
-  if (typeof window === 'undefined') return;
-  const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-  if (!AudioContextClass) return;
-  
-  try {
-    const ctx = new AudioContextClass();
-    const now = ctx.currentTime;
-    
-    const playNote = (freq: number, startTime: number, duration: number) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(freq, startTime);
-      
-      gain.gain.setValueAtTime(0, startTime);
-      gain.gain.linearRampToValueAtTime(0.2, startTime + 0.05);
-      gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
-      
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      
-      osc.start(startTime);
-      osc.stop(startTime + duration);
-    };
-    
-    playNote(523.25, now, 0.3);
-    playNote(659.25, now + 0.06, 0.3);
-    playNote(783.99, now + 0.12, 0.3);
-    playNote(1046.50, now + 0.18, 0.4);
-    playNote(1318.51, now + 0.24, 0.4);
-    playNote(1567.98, now + 0.30, 0.6);
-  } catch (e) {
-    console.warn("Web Audio API not supported or blocked", e);
-  }
+  playVictoryCentral();
 };
 
 export default function App() {
