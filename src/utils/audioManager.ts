@@ -1,29 +1,35 @@
+// Shared, single AudioContext instance
 let sharedCtx: AudioContext | null = null;
 
-function getAudioContext(): AudioContext | null {
+// Only instantiates the AudioContext class inside user interaction gesture callback
+function getOrCreateAudioContext(): AudioContext | null {
   if (typeof window === 'undefined') return null;
   if (sharedCtx) return sharedCtx;
+  
   const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
   if (AudioContextClass) {
-    sharedCtx = new AudioContextClass();
+    try {
+      sharedCtx = new AudioContextClass();
+      console.log("AudioContext created successfully.");
+    } catch (e) {
+      console.warn("Failed to create AudioContext:", e);
+    }
   }
   return sharedCtx;
 }
 
-// Function to unlock audio on user gesture
+// Function to unlock audio on first interaction
 export function unlockAudio() {
-  const ctx = getAudioContext();
+  const ctx = getOrCreateAudioContext();
   if (!ctx) return;
   
   if (ctx.state === 'suspended') {
-    ctx.resume().then(() => {
-      console.log("AudioContext resumed successfully via interaction");
-    }).catch(err => {
-      console.warn("Failed to resume AudioContext", err);
+    ctx.resume().catch(err => {
+      console.warn("Failed to resume AudioContext on gesture:", err);
     });
   }
 
-  // Play a silent buffer to fully unlock iOS audio
+  // Play a silent buffer to satisfy iOS Safari user-gesture requirements
   try {
     const buffer = ctx.createBuffer(1, 1, 22050);
     const source = ctx.createBufferSource();
@@ -34,15 +40,22 @@ export function unlockAudio() {
       source.stop(0);
     }
   } catch (e) {
-    console.warn("Failed to play silent buffer for unlock", e);
+    console.warn("Failed to play silent buffer for unlock:", e);
   }
 }
 
-// Setup global event listeners to unlock on first gesture
-if (typeof window !== 'undefined') {
+let isInitialized = false;
+
+// Explicit initialization function to attach window capturing gesture listeners
+export function initAudio() {
+  if (typeof window === 'undefined') return;
+  if (isInitialized) return;
+  isInitialized = true;
+
   const unlockEvents = ['touchstart', 'touchend', 'mousedown', 'keydown', 'click'];
   const handleUnlock = () => {
     unlockAudio();
+    // Remove listeners immediately after first interaction
     unlockEvents.forEach(evt => {
       window.removeEventListener(evt, handleUnlock, true);
     });
@@ -50,34 +63,30 @@ if (typeof window !== 'undefined') {
   unlockEvents.forEach(evt => {
     window.addEventListener(evt, handleUnlock, true);
   });
+  console.log("AudioManager initialized and touch capturing registered.");
 }
 
+// Helper to safely play audio nodes synchronously on the shared AudioContext
 function safePlay(playFn: (ctx: AudioContext) => void) {
-  const ctx = getAudioContext();
+  const ctx = getOrCreateAudioContext();
   if (!ctx) return;
   
+  // Synchronously resume context in case it is suspended (allowed under user gesture)
   if (ctx.state === 'suspended') {
-    ctx.resume().then(() => {
-      try {
-        playFn(ctx);
-      } catch (err) {
-        console.warn("Playback failed after resume", err);
-      }
-    }).catch(err => {
-      console.warn("Could not resume context to play sound", err);
-    });
-  } else {
-    try {
-      playFn(ctx);
-    } catch (err) {
-      console.warn("Playback failed", err);
-    }
+    ctx.resume().catch(err => console.warn("Failed to resume:", err));
+  }
+  
+  // Play sound synchronously to keep user gesture trust
+  try {
+    playFn(ctx);
+  } catch (err) {
+    console.warn("Audio playback failed:", err);
   }
 }
 
-export function playSuccessSound() {
+export function playSuccessSound(delaySeconds: number = 0) {
   safePlay((ctx) => {
-    const now = ctx.currentTime;
+    const now = ctx.currentTime + delaySeconds;
     const playNote = (freq: number, startTime: number, duration: number) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
@@ -98,9 +107,9 @@ export function playSuccessSound() {
   });
 }
 
-export function playVictorySound() {
+export function playVictorySound(delaySeconds: number = 0) {
   safePlay((ctx) => {
-    const now = ctx.currentTime;
+    const now = ctx.currentTime + delaySeconds;
     const playNote = (freq: number, startTime: number, duration: number) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
@@ -123,9 +132,9 @@ export function playVictorySound() {
   });
 }
 
-export function playSelectionSound() {
+export function playSelectionSound(delaySeconds: number = 0) {
   safePlay((ctx) => {
-    const now = ctx.currentTime;
+    const now = ctx.currentTime + delaySeconds;
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'sine';
@@ -139,9 +148,9 @@ export function playSelectionSound() {
   });
 }
 
-export function playCorrectSound() {
+export function playCorrectSound(delaySeconds: number = 0) {
   safePlay((ctx) => {
-    const now = ctx.currentTime;
+    const now = ctx.currentTime + delaySeconds;
     const playNote = (freq: number, startTime: number, duration: number) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
@@ -160,9 +169,9 @@ export function playCorrectSound() {
   });
 }
 
-export function playIncorrectSound() {
+export function playIncorrectSound(delaySeconds: number = 0) {
   safePlay((ctx) => {
-    const now = ctx.currentTime;
+    const now = ctx.currentTime + delaySeconds;
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'triangle';
