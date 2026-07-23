@@ -11,6 +11,10 @@ export interface StudentProgress {
   readingProgress: number;
   writingProgress: number;
   lastStudyDate: string | null;
+  studentClass?: string;
+  averageScore?: number;
+  syllabusProgress?: number;
+  grammarMastery?: number;
 }
 
 export type ActiveTab = 'dashboard' | 'unit' | 'revision';
