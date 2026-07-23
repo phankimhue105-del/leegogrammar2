@@ -7,7 +7,7 @@ import {
 
 import { dynamicSyllabus, SyllabusUnit, SyllabusRevision } from './data/syllabus';
 import { StudentProgress, ActiveTab, SoundSettings } from './types';
-import { playSuccessSound as playSuccessCentral, playVictorySound as playVictoryCentral } from './utils/audioManager';
+import { playSuccessSound as playSuccessCentral, playVictorySound as playVictoryCentral, initAudio } from './utils/audioManager';
 
 // Component Imports
 import WelcomeScreen from './components/WelcomeScreen';
@@ -79,6 +79,7 @@ export default function App() {
 
   // Load progress on start
   useEffect(() => {
+    initAudio();
     // 1. Load progress
     const storedProgress = localStorage.getItem(PROGRESS_STORAGE_KEY);
     let currentProgress = DEFAULT_PROGRESS;
