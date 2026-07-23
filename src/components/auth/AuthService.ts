@@ -1,4 +1,4 @@
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx6s49LaJgBo9IKKOkoUp-nScpVcx4NbR3H0g_Pv5xgXMpUBANMIXF45tqbyAkhkLoltg/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxM3zVVF-0EwM28wCaOW0qc9HkWCIn3z8rTEgx61r82hUTT_8TfvJA80N4Wkb9CxmHbEA/exec';
 
 export interface LoginResult {
   success: boolean;
